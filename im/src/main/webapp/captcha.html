@@ -1,0 +1,87 @@
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	    <meta http-equiv="pragma" content="no-cache">
+	    <meta http-equiv="cache-control" content="no-cache">
+	    <meta http-equiv="expires" content="0">    
+		<script type="text/javascript" src="resources/jquery-1.11.2.min.js"></script>
+	    <script type="text/javascript" src="dwr/engine.js"></script>
+	    <script type="text/javascript" src="dwr/util.js"></script>
+	    <!--<script type="text/javascript" src="dwr/interface/MessageService.js"></script>-->
+	    <script type="text/javascript" src="dwr/interface/ChatManager.js"></script>
+
+	    <script type="text/javascript">
+	    
+	    	dwr.engine.setNotifyServerOnPageUnload(true);
+	    	function init(){
+	    		var userID = $('#userName').val();
+	    		ChatManager.updateUsersList(userID, userID);
+	    	}
+	    	
+	    	function cancel(){
+	    	}
+	    	
+	        function send() {
+	        	
+	        	var uid = $('#uid').html();
+	        	$.ajax({
+					url  : "web/dwr/response/" + uid,
+					type : 'POST',
+					data : JSON.stringify($('#content').val()),
+					contentType: 'application/json; charset=utf-8',
+					success: function(json) {
+						console.log("success");
+		            },
+		            error: function(msg) { 
+		            	console.log("error"); 
+		            }
+				});
+	        	//I'm ready
+	        	init();
+				return;
+		
+	            var time = new Date();
+	            var content = dwr.util.getValue("content");
+	            var name = dwr.util.getValue("userName");
+	            var info = encodeURI(encodeURI(name + " say:\n" + content));
+	            var msg = {"msg": info, "time": time};
+	            dwr.util.setValue("content", "");
+	            if (!!content) {
+	                MessageService.sendMessage(msg);
+	            } else {
+	                alert("发送的内容不能为空！");
+	            }
+	        }
+	        
+			function showMessage(data) {
+	
+				console.log(data);
+				var text = dwr.util.getValue("info");
+                dwr.util.setValue("info", text + "\n" + data.time + "  from : " + data.id);
+                $('#uid').html(data.id);
+                
+                $("#captcha").attr("src", "data:image/png;base64," + data.captcha);
+                $("#tip").attr("src", "data:image/png;base64," + data.tip);
+                
+                $('#content').val("").focus();
+				/*
+				var msgR = parseInt(1000*Math.random());
+                var tipR = parseInt(1000*Math.random());
+                */
+	        }
+	    </script>
+	</head>
+
+	<body onload="dwr.engine.setActiveReverseAjax(true);">
+		<textarea rows="5" cols="60" id="info" readonly="readonly"></textarea>
+		<hr/>
+		昵称：<input type="text" id="userName"/><input type="button" value="向我开炮" onclick="return init();"></input><br/>
+		消息：<textarea rows="5" cols="30" id="content"></textarea>
+		<input type="button" value=" Send " onclick="send()" style="height: 85px; width: 85px;"/>
+		<label id="uid">UID</label>
+		<img id="captcha" alt="captcha"/>
+		<img id="tip" alt="tips"/>
+		<img width="50px;" height="50px;" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAkCAYAAABIdFAMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAHhJREFUeNo8zjsOxCAMBFB/KEAUFFR0Cbng3nQPw68ArZdAlOZppPFIBhH5EAB8b+Tlt9MYQ6i1BuqFaq1CKSVcxZ2Acs6406KUgpt5/LCKuVgz5BDCSb13ZO99ZOdcZGvt4mJjzMVKqcha68iIePB86GAiOv8CDADlIUQBs7MD3wAAAABJRU5ErkJggg%3D%3D"/>
+		
+	</body>
+</html>

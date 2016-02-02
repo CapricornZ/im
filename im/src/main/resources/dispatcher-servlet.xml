@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:websocket="http://www.springframework.org/schema/websocket"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/websocket http://www.springframework.org/schema/websocket/spring-websocket-4.0.xsd
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<mvc:annotation-driven />
+	<context:component-scan base-package="com.gerrydevstory.stockticker" />
+	<context:component-scan base-package="demo.im.dwr" />
+	
+	<!--
+	<mvc:resources mapping="/resources/**" location="/resources/" />
+	-->
+	
+	<!-- 支持上传文件 -->  
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/>
+    
+    <!-- SPRINGFRAME JACKSON -->
+    <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">      
+        <property name="messageConverters">      
+            <list >      
+                <ref bean="mappingJacksonHttpMessageConverter" />      
+            </list>      
+        </property>      
+    </bean>
+    <bean id="mappingJacksonHttpMessageConverter" class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">    
+	    <property name="supportedMediaTypes">    
+	        <list>    
+	            <value>application/json;charset=UTF-8</value>
+	       </list>    
+	    </property>  
+	</bean>
+	
+	<bean id="viewResolver" class="org.springframework.web.servlet.view.velocity.VelocityLayoutViewResolver">
+		<property name= "cache" value= "true"/>
+		<property name= "prefix" value= "/"/>
+		<property name= "suffix" value= ".vm"/>
+		<property name= "contentType" value="text/html;charset=utf-8"/>
+		<property name="toolboxConfigLocation" value="/WEB-INF/toolbox.xml"/>
+		<property name="layoutUrl" value="layout/layout.vm" />
+		<property name="allowSessionOverride" value="true"/>
+		<property name="allowRequestOverride" value="true"/>
+		<property name="exposeSessionAttributes" value="true"/>
+		<property name="requestContextAttribute" value="rc"/>
+		<property name="exposeRequestAttributes" value="true"/>
+	</bean>
+
+	<bean id="velocityConfigurer" 
+		class="org.springframework.web.servlet.view.velocity.VelocityConfigurer">
+		<property name="resourceLoaderPath" value="WEB-INF/velocity/"/>
+		<property name="velocityProperties">
+			<props>
+				<prop key="input.encoding">UTF-8</prop>
+				<prop key="output.encoding">UTF-8</prop>
+				<prop key="contentType">text/html;charset=UTF-8</prop>
+				<!-- <prop key="velocimacro.library">macro/macros.vm</prop> -->
+			</props>
+		</property>
+	</bean>
+	
+	<!-- 
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+	 -->
+	 
+	 
+    <bean id="websocket" class="com.gerrydevstory.stockticker.WebsocketEndPoint"/>  
+      
+    <websocket:handlers>  
+        <websocket:mapping path="/websocket" handler="websocket"/>  
+        <websocket:handshake-interceptors>  
+        	<bean class="com.gerrydevstory.stockticker.HandshakeInterceptor"/>
+        </websocket:handshake-interceptors>  
+    </websocket:handlers>  
+	 
+	<websocket:message-broker application-destination-prefix="/app">
+		<websocket:stomp-endpoint path="/ws">
+			<websocket:sockjs />
+		</websocket:stomp-endpoint>
+		<websocket:simple-broker prefix="/topic" />
+	</websocket:message-broker>
+
+</beans>
