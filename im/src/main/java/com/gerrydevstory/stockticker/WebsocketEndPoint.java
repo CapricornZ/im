@@ -11,8 +11,13 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import demo.im.rs.entity.Ack;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import demo.im.rs.entity.Ready;
 import demo.im.rs.entity.Command;
+import demo.im.rs.entity.CommandAdapter;
+import demo.im.rs.entity.Message;
 
 public class WebsocketEndPoint extends TextWebSocketHandler {
 
@@ -33,7 +38,7 @@ public class WebsocketEndPoint extends TextWebSocketHandler {
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
 
-		logger.debug("connection lost......");
+		logger.debug("connection({}) lost......", session.getAttributes().get(USER));
 		sessions.remove(session);
 		super.afterConnectionClosed(session, status);
 	}
@@ -44,19 +49,24 @@ public class WebsocketEndPoint extends TextWebSocketHandler {
 		logger.info("handleMessage({})", session.getAttributes().get(USER) == null ? "DEFAULT USER" : session.getAttributes().get(USER));
 		super.handleTextMessage(session, message);
 		
-		Ack ack = new com.google.gson.Gson().fromJson(message.getPayload(), Ack.class);
+		//Ready ack = new com.google.gson.Gson().fromJson(message.getPayload(), Ready.class);
+
+		Gson gson = new GsonBuilder().registerTypeAdapter(Command.class, new CommandAdapter()).create();
+	    Command ack = gson.fromJson(message.getPayload(), Command.class);
+	    
 		if("READY".equals(ack.getCategory())){//ready
 			
-			session.getAttributes().put(USER, ack.getUser());
+			Ready ready = (Ready)ack;
+			session.getAttributes().put(USER, ready.getUser());
 			logger.info("{} isReady", session.getAttributes().get(USER));
-			
-		} else {//echo
+		}
+		if("MESSAGE".equals(ack.getCategory())){
           
 			logger.info("handleMessage(ECHO)", ack.getCategory());
-			//String message1 = new com.google.gson.Gson().toJson(command);
-			//TextMessage msg = new TextMessage(message.getBytes());
-	        TextMessage returnMessage = new TextMessage(message.getPayload()+" received at server");  
-	        session.sendMessage(returnMessage);  
+			Message msg = (Message)ack;
+	        TextMessage returnMessage = new TextMessage(message.getPayload());
+	        for(WebSocketSession sess : this.sessions)
+	        	sess.sendMessage(returnMessage);  
 		}
     }
 	
