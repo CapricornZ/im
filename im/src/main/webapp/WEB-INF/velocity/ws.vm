@@ -52,6 +52,8 @@
 <script type="text/javascript" src="${ContextPath}/resources/jquery-1.11.2.min.js"></script>
 <script type="text/javascript" src="${ContextPath}/resources/jquery.timers.js"></script>
 <script type="text/javascript" src="${ContextPath}/resources/notify.js"></script>
+<script type="text/javascript" src="${ContextPath}/resources/binary.min.js"></script>
+<script type="text/javascript" src="${ContextPath}/resources/stomp.js"></script>
 <script type="text/javascript">
 	var ws = null;
 	var url = '${ContextPath}/web/websocket';
@@ -119,7 +121,7 @@
 		};  
 		
 		ws.onmessage = function (event) {
-			
+
 			var json = JSON.parse(event.data);
 			console.log(json);
 			
@@ -130,8 +132,8 @@
 				
 			if(json.category == 'CAPTCHA'){
 				
-				$.notify("新验证码" + json.time, "warn");
-				log('[BIZ ] : 收到新的验证码请求');
+				$.notify("新验证码", "warn");
+				log('[BIZ ] : 收到新的验证码请求 time:' + json.time);
 				queue.push(json);
 				if(isReady){
 					isReady = false;
@@ -144,7 +146,7 @@
 
 		ws.onclose = function (event) {
 			setConnected(false);
-			log('[Info] : connection closed.', 'red');
+			log('[INFO] : connection closed.', 'red');
 			//log(event);
 		};  
 	}  
@@ -242,8 +244,15 @@
         console.scrollTop = console.scrollHeight;  
     }
     
+    
+    var stompClient;
     $(function(){
     	
+    	var socket = new SockJS("${ContextPath}/web/ws");
+    	stompClient = Stomp.over(socket);
+    	// Connect to server via websocket
+    	stompClient.connect("guest", "guest", connectCallback, errorCallback);
+    
     	$('body').everyTime('1s','A',function(){
     		$('#TIMER').html(new Date().pattern("yyyy-MM-dd HH:mm:ss"));
 		});
@@ -281,13 +290,31 @@
 							console.log("success");
 							imReady();
 						},
-			            error: function(msg) { console.log("error"); }
+			            error: function(msg) {
+			             
+			            	console.log("error");
+			            	imReady(); 
+			            }
 					});
 				else
 					imReady();
 		    }
 		});
     });
+    
+    var connectCallback = function() {
+      stompClient.subscribe('/topic/price', function(frame){
+      	var users = JSON.parse(frame.body);
+      	$('#users').html("");
+      	for(var i=0; i< users.length; i++){
+      		$('#users').append("<p>"+users[i]+"</p>");
+      	}
+      });
+    }; 
+    // Callback function to be called when stomp client could not connect to server
+    var errorCallback = function(error) {
+      alert(error.headers.message);
+    };
 </script>
 </head>
 <body>
@@ -336,6 +363,7 @@
 		</div>
 		<div id="console-container">
 			<div id="console"></div>
+			<div id="users"></div>
 		</div>
 	</div>
 </body>

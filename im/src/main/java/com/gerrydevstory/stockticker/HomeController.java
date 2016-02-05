@@ -12,6 +12,7 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.servlet.http.HttpSession;
 
+import org.apache.activemq.broker.BrokerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -68,19 +69,37 @@ public class HomeController implements ApplicationContextAware{
 		template.convertAndSend("/topic/price", stockPrices);
 	}
 
+	class BroadCast implements Runnable{
+
+		public BroadCast(WebsocketEndPoint ws){
+			this.wsEndPoint = ws;
+		}
+		private WebsocketEndPoint wsEndPoint;
+		@Override
+		public void run() {
+			
+			template.convertAndSend("/topic/price", this.wsEndPoint.getActiveUsers());
+		}
+		
+	}
 	/**
 	 * Invoked after bean creation is complete, this method will schedule
 	 * updatePriceAndBroacast every 1 second
+	 * @throws Exception 
 	 */
 	@PostConstruct
-	private void broadcastTimePeriodically() {
-		scheduler.scheduleAtFixedRate(new Runnable() {
+	private void broadcastTimePeriodically() throws Exception {
+		scheduler.scheduleAtFixedRate(new BroadCast(this.wsEndpoint), 5000);
+		/*scheduler.scheduleAtFixedRate(new Runnable() {
 			@Override
 			public void run() {
-				//System.out.println("broadcast");
 				updatePriceAndBroadcast();
 			}
-		}, 1000);
+		}, 1000);*/
+		
+		//BrokerService broker = new BrokerService();
+		//broker.addConnector("tcp://localhost:61616");
+		//broker.start();
 	}
 
 	/**

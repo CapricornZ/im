@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -26,6 +27,19 @@ public class WebsocketEndPoint extends TextWebSocketHandler {
 	private static final Logger logger = LoggerFactory.getLogger(WebsocketEndPoint.class);
 	private List<WebSocketSession> sessions = new ArrayList<WebSocketSession>();
 	private int current = 0;
+	
+	public List<String> getActiveUsers(){
+		List<String> rtn = new ArrayList<String>();
+		for(WebSocketSession session : this.sessions){
+			
+			String user = (String)session.getAttributes().get(USER);
+			if( null != user )
+				rtn.add(user);
+			else
+				rtn.add("DEFAULT USER");
+		}
+		return rtn;
+	}
 	
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -65,8 +79,11 @@ public class WebsocketEndPoint extends TextWebSocketHandler {
 			logger.info("handleMessage(ECHO)", ack.getCategory());
 			Message msg = (Message)ack;
 	        TextMessage returnMessage = new TextMessage(message.getPayload());
-	        for(WebSocketSession sess : this.sessions)
-	        	sess.sendMessage(returnMessage);  
+	        BinaryMessage binMsg = new BinaryMessage(new byte[]{ 0,2,4,6,8 });
+	        for(WebSocketSession sess : this.sessions){
+	        	sess.sendMessage(returnMessage);
+	        	//sess.sendMessage(binMsg);
+	        }
 		}
     }
 	
