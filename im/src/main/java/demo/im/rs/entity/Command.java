@@ -9,7 +9,7 @@ public abstract class Command {
 
 	public String getCategory() { return category; }
 	public void setCategory(String category) { this.category = category; }
-	
+
 	public Date getTime() { return time; }
 	public void setTime(Date time) { this.time = time; }
 }

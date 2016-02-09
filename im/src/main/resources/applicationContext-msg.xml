@@ -71,6 +71,9 @@
         <property name="connectionFactory" ref="queueConnectionFactory"/>
         <property name="defaultDestination" ref="destination"/>
         <property name="pubSubDomain" value="false" />
+        <property name="explicitQosEnabled" value="true" />
+        <property name="timeToLive" value="30000" />
+        <property name="receiveTimeout" value="15000" />
     </bean>
     
     <bean id="messageService" class="demo.im.dwr.MessageService">

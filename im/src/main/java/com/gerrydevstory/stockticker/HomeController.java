@@ -167,7 +167,8 @@ public class HomeController implements ApplicationContextAware{
 				message.setStringProperty("from", uid);
 				return message;
 			}
-		}; 
+		};
+		
 		this.jmsTemplate.send(messageCreator);
 		return "SUCCESS";
 	}
@@ -195,7 +196,10 @@ public class HomeController implements ApplicationContextAware{
 			String selector = String.format("from='%s'", uid);
 			JmsTemplate jmsTemplate = (JmsTemplate)this.ctx.getBean("jmsTemplate");
 			Object message = jmsTemplate.receiveSelectedAndConvert(selector);
-			return (String)message;
+			if(null == message)
+				return "ERROR";
+			else
+				return (String)message;
 			
 		}catch(Exception ex){
 			ex.printStackTrace();

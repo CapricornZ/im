@@ -1,6 +1,7 @@
 package com.gerrydevstory.stockticker;
 
 import java.io.IOException;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +19,7 @@ import com.google.gson.GsonBuilder;
 import demo.im.rs.entity.Ready;
 import demo.im.rs.entity.Command;
 import demo.im.rs.entity.CommandAdapter;
+import demo.im.rs.entity.DateTimeSerializer;
 import demo.im.rs.entity.Message;
 
 public class WebsocketEndPoint extends TextWebSocketHandler {
@@ -106,7 +108,10 @@ public class WebsocketEndPoint extends TextWebSocketHandler {
 	
 	public void dispatch(Command command) throws IOException{
 		
-		String message = new com.google.gson.Gson().toJson(command);
+		GsonBuilder gson = new GsonBuilder();
+		gson.setDateFormat("HH:mm:ss");
+		String message = gson.create().toJson(command);
+		//String message = new com.google.gson.Gson().toJson(command);
 		TextMessage msg = new TextMessage(message.getBytes());
 		if(this.sessions.size() > 0){
 			
