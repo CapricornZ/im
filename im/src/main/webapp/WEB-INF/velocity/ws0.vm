@@ -1,0 +1,315 @@
+#set( $ContextPath = ${request.contextPath} )
+<html>
+	<head>
+		<title>WebSocket/SockJS 校验码Demo</title>
+		<link type="text/css" href="${ContextPath}/resources/css/bootstrap.min.css" rel="stylesheet"/>
+		
+		<script type="text/javascript" src="${ContextPath}/resources/sockjs-0.3.min.js"></script>
+		<script type="text/javascript" src="${ContextPath}/resources/jquery-1.11.2.min.js"></script>
+		<script type="text/javascript" src="${ContextPath}/resources/jquery.timers.js"></script>
+		<script type="text/javascript" src="${ContextPath}/resources/notify.js"></script>
+		<script type="text/javascript" src="${ContextPath}/resources/binary.min.js"></script>
+		<script type="text/javascript" src="${ContextPath}/resources/stomp.js"></script>
+		
+		<script type="text/javascript">
+			var ws = null;
+			var url = '${ContextPath}/web/websocket';
+			var transports = [];
+			
+			var stompClient;
+			
+			var queue = new Array();
+			var isReady = false;
+			
+			Date.prototype.pattern=function(fmt) {
+				var o = {         
+				    "M+" : this.getMonth()+1, //月份         
+				    "d+" : this.getDate(), //日         
+				    "h+" : this.getHours()%12 == 0 ? 12 : this.getHours()%12, //小时         
+				    "H+" : this.getHours(), //小时         
+				    "m+" : this.getMinutes(), //分         
+				    "s+" : this.getSeconds(), //秒         
+				    "q+" : Math.floor((this.getMonth()+3)/3), //季度         
+				    "S" : (1000 + this.getMilliseconds() + "").substring(1) //毫秒
+				};         
+			    var week = {         
+				    "0" : "/u65e5",         
+				    "1" : "/u4e00",         
+				    "2" : "/u4e8c",         
+				    "3" : "/u4e09",         
+				    "4" : "/u56db",         
+				    "5" : "/u4e94",         
+				    "6" : "/u516d"        
+				};         
+			    if(/(y+)/.test(fmt)){         
+			        fmt=fmt.replace(RegExp.$1, (this.getFullYear()+"").substr(4 - RegExp.$1.length));         
+			    }         
+			    if(/(E+)/.test(fmt)){         
+			        fmt=fmt.replace(RegExp.$1, ((RegExp.$1.length>1) ? (RegExp.$1.length>2 ? "/u661f/u671f" : "/u5468") : "")+week[this.getDay()+""]);         
+			    }         
+			    for(var k in o){         
+			        if(new RegExp("("+ k +")").test(fmt)){         
+			            fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));         
+			        }         
+			    }         
+			    return fmt;         
+			}
+			
+			function setConnected(connected) {
+		    
+		        document.getElementById('connect').disabled = connected;
+		        document.getElementById('disconnect').disabled = !connected;
+		        document.getElementById('echo').disabled = !connected;
+		    }
+		    
+		    function connect() {
+		
+				console.log("url:"+url);
+				if (!url) {
+					alert('Select whether to use W3C WebSocket or SockJS');
+					return;
+				}
+		
+				ws = (url.indexOf('sockjs') != -1) ? new SockJS(url, undefined, {protocols_whitelist: transports}) : new WebSocket(url);  
+		
+				ws.onopen = function () {
+				
+					setConnected(true);
+					log('[Info] : connection opened.', 'blue');
+					imReady();
+				};  
+				
+				ws.onmessage = function (event) {
+		
+					var json = JSON.parse(event.data);
+					console.log(json);
+					
+					if(json.category == 'MESSAGE'){
+						log('[RECV] : ' + json.content, 'green');
+						$.notify(json.content, "info");
+					}
+						
+					if(json.category == 'CAPTCHA'){
+						
+						$.notify("新验证码", "warn");
+						log('[BIZ ] : 收到新的验证码请求 time:' + json.time);
+						queue.push(json);
+						if(isReady){
+							isReady = false;
+							var captcha = queue.shift();
+							renderCaptcha(captcha);
+						}
+						$("#QUEUE").html(queue.length);
+					}
+				};  
+		
+				ws.onclose = function (event) {
+					setConnected(false);
+					log('[INFO] : connection closed.', 'red');
+					//log(event);
+				};  
+			}  
+		      
+			function disconnect() {
+				if (ws != null) {
+					ws.close();
+					ws = null;
+				}
+				setConnected(false);
+			}
+			
+			function broadcast() {
+		
+				if (ws != null) {
+					var message = {
+						'content' : $('#message').val(),
+						'category': 'MESSAGE'
+					};
+					log('[SEND] : ' + message.content);
+					ws.send(JSON.stringify(message));
+				} else {
+					alert('connection not established, please connect.');
+				}
+			}
+			
+			function renderCaptcha(captcha){
+			
+				$('#uid').html(captcha.uid);
+				$('#captcha').attr('src', 'data:image/jpeg;base64,' + captcha.captcha);
+				$('#tip').attr('src', 'data:image/jpeg;base64,' + captcha.tip);
+				$('#inputCaptcha').val("").focus();
+			}
+			
+			function imReady(){
+			
+				if (ws != null) {
+				
+					isReady = true;
+					if(queue.length > 0){
+						isReady = false;
+						var captcha = queue.shift();
+						renderCaptcha(captcha);
+						
+					} else {
+					
+						$("#uid").html("");
+						$("#captcha").attr("src","");
+						$("#tip").attr("src",""); 
+						$("#inputCaptcha").val("");
+						var ack = { "category":"READY", "user":"${USER}" };
+						ws.send(JSON.stringify(ack));
+					}
+					$("#QUEUE").html(queue.length);
+				} else {
+					alert('connection not established, please connect.');
+				}
+			}
+		      
+		    function updateUrl(urlPath) {  
+		    
+		        if (urlPath.indexOf('sockjs') != -1) {
+		          
+		            url = urlPath;  
+		            document.getElementById('sockJsTransportSelect').style.visibility = 'visible';  
+		        } else {
+		          
+		          if (window.location.protocol == 'http:') {  
+		              url = 'ws://' + window.location.host + urlPath;  
+		          } else {  
+		              url = 'wss://' + window.location.host + urlPath;  
+		          }  
+		          document.getElementById('sockJsTransportSelect').style.visibility = 'hidden';  
+		        }  
+		    }  
+		      
+		    function updateTransport(transport) {
+		    	alert(transport);
+		    	transports = (transport == 'all') ?  [] : [transport];  
+		    }  
+		      
+		    function log(message, color) {
+		
+				var timestamp = new Date().pattern("hh:mm:ss.S");
+		        var console = document.getElementById('console');
+		        var p = document.createElement('p');
+		        p.style.wordWrap = 'break-word';
+		        p.style.margin = '0 0 0 0';
+		        if(color != undefined)
+		        	p.style.color = color;
+		        p.appendChild(document.createTextNode(timestamp + ' ' + message));
+		        console.appendChild(p);
+		        while (console.childNodes.length > 25) {
+		            console.removeChild(console.firstChild);
+		        }
+		        console.scrollTop = console.scrollHeight;
+		    }
+		    
+		    $(function(){
+
+		    	var socket = new SockJS("${ContextPath}/web/ws");
+		    	stompClient = Stomp.over(socket);
+		    	stompClient.connect("guest", "guest", connectCallback, errorCallback);
+		    
+		    	$('body').everyTime('1s','A',function(){ $('#TIMER').html(new Date().pattern("yyyy-MM-dd HH:mm:ss")); });
+		    
+		    	if (window.location.protocol == 'http:') {
+		    		url = 'ws://' + window.location.host + url;
+		    	} else {
+		    		url = 'wss://' + window.location.host + url;
+		    	}
+		          
+		    	$('#inputCaptcha').keydown(function(event) {
+		
+				    if((event.keyCode >= 48 && event.keyCode <= 57)
+				    	|| (event.keyCode >=96 && event.keyCode <=105) 
+				    	|| event.keyCode == 8 || event.keyCode == 46 || event.keyCode == 39 || event.keyCode == 37)
+				    	;
+				    else if (event.keyCode == 27){//ESC
+				    	
+				    	event.preventDefault();
+				    	imReady();
+				    }
+				    else if (event.keyCode == 32 || event.keyCode == 13){//ENTER || SPACE
+				    
+				    	event.preventDefault();
+				    	var uid = $('#uid').html();
+				    	var code = $('#inputCaptcha').val();
+				    	if(uid != '' && code != "")
+				        	$.ajax({
+								url  : "${ContextPath}/web/home/response/" + uid,
+								type : 'POST',
+								data : code,
+								contentType: 'application/json; charset=utf-8',
+								success: function(json) { 
+									
+									console.log("success");
+									imReady();
+								},
+					            error: function(msg) {
+					             
+					            	console.log("error");
+					            	imReady(); 
+					            }
+							});
+						else
+							imReady();
+				    }
+				});
+		    });
+		    
+		    var connectCallback = function() {
+		    	stompClient.subscribe('/topic/price', function(frame){
+			      	var users = JSON.parse(frame.body);
+			      	$('#users').html("");
+			      	for(var i=0; i< users.length; i++){
+			      		$('#users').append("<p style='word-wrap: break-word;margin:0 0 0 0;'>"+users[i]+"</p>");
+			      	}
+				});
+		    };
+		    var errorCallback = function(error) { alert(error.headers.message); };
+		</script>
+	</head>
+	
+	<body>
+		<div class="row">
+			<div class="col-lg-3" style="margin-left: 10px;">
+				<div style="margin-top: 10px;">
+					<input id="radio1" name="group1" onclick="updateUrl('/im/web/websocket');" type="radio">W3C WebSocket<br/>
+					<input id="radio2" checked="" name="group1" onclick="updateUrl('/im/web/websocket');" type="radio">SockJS<br/>
+
+					<button id="connect" onclick="connect();" class="btn btn-success" style="margin-top: 10px;">Connect</button>
+					<button id="disconnect" disabled="" onclick="disconnect();" class="btn btn-danger" style="margin-top: 10px;">Disconnect</button>
+				</div>
+				<div style="margin-top: 10px;">
+					<textarea id="message" style="width: 300px;height: 100px;">广播消息</textarea>
+				</div>
+				<div style="margin-top: 10px;">
+					<button id="echo" onclick="broadcast();" disabled="" class="btn btn-primary" style="margin-right:70px;">消息广播</button>
+					<label id="TIMER">2016-02-11 19:45:20</label>
+				</div>
+			</div>
+			
+			<div class="col-lg-3" style="margin-left: 10px;padding-top: 10px;">
+				<p style="margin-bottom:10px;text-align:right;width:270px;">
+					<span id="SPANQ">QUEUE<span id='QUEUE' class="badge">0</span></span>
+				</p>
+				<p style="color:red;font-size:large;margin-bottom:10px;">
+					<img id="tip" alt="正在获取验证码..." border="1"/><br/>
+					<img id="captcha" alt="验证码图片在此!" height="48"/><br/>
+				</p>
+				<!--
+				<img width="50px;" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAkCAYAAABIdFAMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAHhJREFUeNo8zjsOxCAMBFB/KEAUFFR0Cbng3nQPw68ArZdAlOZppPFIBhH5EAB8b+Tlt9MYQ6i1BuqFaq1CKSVcxZ2Acs6406KUgpt5/LCKuVgz5BDCSb13ZO99ZOdcZGvt4mJjzMVKqcha68iIePB86GAiOv8CDADlIUQBs7MD3wAAAABJRU5ErkJggg=="/>
+				-->
+				<input type="text" id="inputCaptcha" style="margin-bottom:10px;height:32px;"/>
+				<button class="btn">X</button>
+				<br/>
+				TO:<label id="uid"></label>
+			</div>
+			
+			<div class="col-lg-4" style="margin-left: 10px;">
+				<div id="console" style="border: 1px solid #CCCCCC;height: 170px;overflow-y: scroll;"></div><button class="btn" onclick='$("#console").html("");'>clear</button>
+				<div id="users" style="border: 1px solid #CCCCCC;overflow-y: scroll;"></div>
+			</div>
+		</div>
+	</body>
+</html>

@@ -128,6 +128,14 @@ public class HomeController implements ApplicationContextAware{
 		return "home";
 	}
 	
+	@RequestMapping(value = "/ws0/{USER}", method = RequestMethod.GET)
+	public String ws0(@PathVariable("USER")String user, HttpSession session, Model model){
+		
+		//session.setAttribute("USER", user);
+		model.addAttribute("USER", user);
+		return "ws0";
+	}
+	
 	@RequestMapping(value = "/ws/{USER}", method = RequestMethod.GET)
 	public String ws(@PathVariable("USER")String user, HttpSession session, Model model){
 		

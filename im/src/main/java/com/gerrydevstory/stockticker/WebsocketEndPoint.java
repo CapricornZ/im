@@ -1,7 +1,6 @@
 package com.gerrydevstory.stockticker;
 
 import java.io.IOException;
-import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +18,6 @@ import com.google.gson.GsonBuilder;
 import demo.im.rs.entity.Ready;
 import demo.im.rs.entity.Command;
 import demo.im.rs.entity.CommandAdapter;
-import demo.im.rs.entity.DateTimeSerializer;
 import demo.im.rs.entity.Message;
 
 public class WebsocketEndPoint extends TextWebSocketHandler {
@@ -117,8 +115,10 @@ public class WebsocketEndPoint extends TextWebSocketHandler {
 			
 			int idx = (++this.current) % this.sessions.size();
 			WebSocketSession user = this.sessions.get(idx);
-			logger.debug("dispatch COMMAND to user:{}", user.getAttributes().get(USER));
-			user.sendMessage(msg);
+			synchronized(user){
+				logger.debug("dispatch COMMAND to user:{}", user.getAttributes().get(USER));
+				user.sendMessage(msg);
+			}
 		}
 	}
 }
