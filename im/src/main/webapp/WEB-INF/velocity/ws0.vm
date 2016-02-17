@@ -1,8 +1,9 @@
 #set( $ContextPath = ${request.contextPath} )
 <html>
 	<head>
-		<title>WebSocket/SockJS 校验码Demo</title>
+		<title>校验码Demo - WebSocket/SockJS</title>
 		<link type="text/css" href="${ContextPath}/resources/css/bootstrap.min.css" rel="stylesheet"/>
+		<link type="text/css" href="${ContextPath}/resources/css/bootstrap-switch.min.css" rel="stylesheet"/>
 		
 		<script type="text/javascript" src="${ContextPath}/resources/sockjs-0.3.min.js"></script>
 		<script type="text/javascript" src="${ContextPath}/resources/jquery-1.11.2.min.js"></script>
@@ -11,12 +12,17 @@
 		<script type="text/javascript" src="${ContextPath}/resources/binary.min.js"></script>
 		<script type="text/javascript" src="${ContextPath}/resources/stomp.js"></script>
 		
+		<script type="text/javascript" src="${ContextPath}/resources/bootstrap.js"></script>
+		<script type="text/javascript" src="${ContextPath}/resources/bootstrap-switch.js"></script>
+		
 		<script type="text/javascript">
 			var ws = null;
 			var url = '${ContextPath}/web/websocket';
 			var transports = [];
+			var userName = "Browser User";
 			
 			var stompClient;
+			var delay = 500;
 			
 			var queue = new Array();
 			var isReady = false;
@@ -60,6 +66,8 @@
 		        document.getElementById('connect').disabled = connected;
 		        document.getElementById('disconnect').disabled = !connected;
 		        document.getElementById('echo').disabled = !connected;
+		        $('#message').attr('disabled', !connected);
+		        $("#status").html(connected ? "在线！" : "离线！");
 		    }
 		    
 		    function connect() {
@@ -69,6 +77,9 @@
 					alert('Select whether to use W3C WebSocket or SockJS');
 					return;
 				}
+				
+				userName = window.prompt("在此输入您的大名","BID001");
+				if(userName == ""){ return;	}
 		
 				ws = (url.indexOf('sockjs') != -1) ? new SockJS(url, undefined, {protocols_whitelist: transports}) : new WebSocket(url);  
 		
@@ -86,13 +97,14 @@
 					
 					if(json.category == 'MESSAGE'){
 						log('[RECV] : ' + json.content, 'green');
-						$.notify(json.content, "info");
+						$.notify(json.content, "warn");
 					}
 						
 					if(json.category == 'CAPTCHA'){
 						
-						$.notify("新验证码", "warn");
-						log('[BIZ ] : 收到新的验证码请求 time:' + json.time);
+						//$.notify("新验证码", "warn");
+						//log('[BIZ ] : 新的验证码请求 time:' + json.time);
+						logCaptcha('[BIZ ] : 新的验证码请求 time:' + json.time, json);
 						queue.push(json);
 						if(isReady){
 							isReady = false;
@@ -135,9 +147,42 @@
 			function renderCaptcha(captcha){
 			
 				$('#uid').html(captcha.uid);
-				$('#captcha').attr('src', 'data:image/jpeg;base64,' + captcha.captcha);
 				$('#tip').attr('src', 'data:image/jpeg;base64,' + captcha.tip);
+				$('#captcha').attr('src',"");
 				$('#inputCaptcha').val("").focus();
+				$('#captcha').oneTime(delay > 0 ? delay : 300, function(){
+					$('#captcha').attr('src', 'data:image/jpeg;base64,' + captcha.captcha);
+				});
+			}
+			
+			function submitCaptcha(){
+				
+				var uid = $('#uid').html();
+		    	var code = $('#inputCaptcha').val();
+		    	if(uid != '' && code != "")
+		        	$.ajax({
+						url  : "${ContextPath}/web/home/response/" + uid,
+						type : 'POST',
+						data : code,
+						contentType: 'application/json; charset=utf-8',
+						success: function(json) { 
+							
+							console.log("success");
+							imReady();
+						},
+			            error: function(msg) {
+			             
+			            	console.log("error");
+			            	imReady(); 
+			            }
+					});
+				else
+					imReady();
+			}
+			
+			function setDelayMS(){
+				delay = parseInt($("#inputDelay").val());
+				$("#spanDelay").html(delay);
 			}
 			
 			function imReady(){
@@ -156,7 +201,7 @@
 						$("#captcha").attr("src","");
 						$("#tip").attr("src",""); 
 						$("#inputCaptcha").val("");
-						var ack = { "category":"READY", "user":"${USER}" };
+						var ack = { "category":"READY", "user":userName };
 						ws.send(JSON.stringify(ack));
 					}
 					$("#QUEUE").html(queue.length);
@@ -187,6 +232,11 @@
 		    	transports = (transport == 'all') ?  [] : [transport];  
 		    }  
 		      
+		    function logCaptcha(message, captcha){
+		    	var p = log(message);
+		    	$(p).attr('guid', captcha.uid);
+		    }
+		    
 		    function log(message, color) {
 		
 				var timestamp = new Date().pattern("hh:mm:ss.S");
@@ -202,6 +252,7 @@
 		            console.removeChild(console.firstChild);
 		        }
 		        console.scrollTop = console.scrollHeight;
+		        return p;
 		    }
 		    
 		    $(function(){
@@ -232,29 +283,9 @@
 				    else if (event.keyCode == 32 || event.keyCode == 13){//ENTER || SPACE
 				    
 				    	event.preventDefault();
-				    	var uid = $('#uid').html();
-				    	var code = $('#inputCaptcha').val();
-				    	if(uid != '' && code != "")
-				        	$.ajax({
-								url  : "${ContextPath}/web/home/response/" + uid,
-								type : 'POST',
-								data : code,
-								contentType: 'application/json; charset=utf-8',
-								success: function(json) { 
-									
-									console.log("success");
-									imReady();
-								},
-					            error: function(msg) {
-					             
-					            	console.log("error");
-					            	imReady(); 
-					            }
-							});
-						else
-							imReady();
+				    	submitCaptcha();
 				    }
-				});
+				});				
 		    });
 		    
 		    var connectCallback = function() {
@@ -272,43 +303,61 @@
 	
 	<body>
 		<div class="row">
-			<div class="col-lg-3" style="margin-left: 10px;">
+			<div class="col-lg-2" style="margin-left: 10px;">
 				<div style="margin-top: 10px;">
 					<input id="radio1" name="group1" onclick="updateUrl('/im/web/websocket');" type="radio">W3C WebSocket<br/>
 					<input id="radio2" checked="" name="group1" onclick="updateUrl('/im/web/websocket');" type="radio">SockJS<br/>
 
-					<button id="connect" onclick="connect();" class="btn btn-success" style="margin-top: 10px;">Connect</button>
-					<button id="disconnect" disabled="" onclick="disconnect();" class="btn btn-danger" style="margin-top: 10px;">Disconnect</button>
+					<button id="connect" onclick="connect();" class="btn btn-primary" style="margin-top: 10px;">Connect</button>
+					<button id="disconnect" disabled="" onclick="disconnect();" class="btn btn-primary" style="margin-top: 10px;">Disconnect</button><br/>
+					<span id="status">离线！</span>
 				</div>
 				<div style="margin-top: 10px;">
-					<textarea id="message" style="width: 300px;height: 100px;">广播消息</textarea>
+					<textarea id="message" style="height: 100px;" disabled="">输入消息...</textarea>
+				</div>
+				<div style="margin-top: 10px;text-align:right;">
+					<button id="echo" onclick="broadcast();" disabled="" class="btn btn-primary btn-sm">消息广播</button>
 				</div>
 				<div style="margin-top: 10px;">
-					<button id="echo" onclick="broadcast();" disabled="" class="btn btn-primary" style="margin-right:70px;">消息广播</button>
-					<label id="TIMER">2016-02-11 19:45:20</label>
+					验证码延迟时间(<span id="spanDelay">500</span>ms):<br/>
+					<input id="inputDelay" type="text" size='6' value="500" onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')"/>
+					<button class="btn btn-xs btn-primary" onclick="return setDelayMS();">设置</button>
 				</div>
 			</div>
 			
-			<div class="col-lg-3" style="margin-left: 10px;padding-top: 10px;">
-				<p style="margin-bottom:10px;text-align:right;width:270px;">
+			<!--<div class="col-sm-5" style="width:500px;background: no-repeat url(../../images/bids.bmp);">-->
+			<div class="col-lg-3" style="text-align:center;width:500px;height:330px;margin-left: 10px;padding-top: 10px; background: no-repeat url(${ContextPath}/resources/img/bids.bmp);">
+				<p style="margin-top:15px ; margin-bottom:10px;margin-right: 50px; text-align:right;">
 					<span id="SPANQ">QUEUE<span id='QUEUE' class="badge">0</span></span>
+				</p>
+				<p style="text-align:center;">
+					<label style="margin-top:20px;" id="TIMER">2016-02-11 19:45:20</label>
+				</p>
+				<p style="text-align:center;">
+					<span style="height:48px;width:200px;color:red;font-size:large;margin-bottom:10px;border:2px solid #000000;text-align:center;display:inline-block;">
+						<img id="captcha" alt="验证码图片在此!" height="48" border="2"/>
+					</span>
 				</p>
 				<p style="color:red;font-size:large;margin-bottom:10px;">
 					<img id="tip" alt="正在获取验证码..." border="1"/><br/>
-					<img id="captcha" alt="验证码图片在此!" height="48"/><br/>
 				</p>
 				<!--
 				<img width="50px;" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAkCAYAAABIdFAMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAHhJREFUeNo8zjsOxCAMBFB/KEAUFFR0Cbng3nQPw68ArZdAlOZppPFIBhH5EAB8b+Tlt9MYQ6i1BuqFaq1CKSVcxZ2Acs6406KUgpt5/LCKuVgz5BDCSb13ZO99ZOdcZGvt4mJjzMVKqcha68iIePB86GAiOv8CDADlIUQBs7MD3wAAAABJRU5ErkJggg=="/>
 				-->
 				<input type="text" id="inputCaptcha" style="margin-bottom:10px;height:32px;"/>
-				<button class="btn">X</button>
 				<br/>
-				TO:<label id="uid"></label>
+				<button class="btn btn-sm btn-primary" onclick="return submitCaptcha();">空格失效？快点这里！</button>
+				<br/>
+				GUID:<label id="uid"></label>
 			</div>
 			
 			<div class="col-lg-4" style="margin-left: 10px;">
-				<div id="console" style="border: 1px solid #CCCCCC;height: 170px;overflow-y: scroll;"></div><button class="btn" onclick='$("#console").html("");'>clear</button>
-				<div id="users" style="border: 1px solid #CCCCCC;overflow-y: scroll;"></div>
+				<div id="console" style="border: 1px solid #CCCCCC; height:170px; overflow-y: scroll;"></div>
+				<div class="row">
+					<div class="col-lg-8">在线用户：</div>
+					<div class="col-lg-4" style="text-align:right;"><button class="btn" onclick='$("#console").html("");'>clear^</button></div>
+				</div>
+				<div id="users" style="border: 1px solid #CCCCCC; overflow-y: scroll; height:50px;"></div>
 			</div>
 		</div>
 	</body>
