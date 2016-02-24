@@ -12,7 +12,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.servlet.http.HttpSession;
 
-import org.apache.activemq.broker.BrokerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -130,18 +129,8 @@ public class HomeController implements ApplicationContextAware{
 	
 	@RequestMapping(value = "/ws0", method = RequestMethod.GET)
 	public String ws0(HttpSession session, Model model){
-		
-		//session.setAttribute("USER", user);
-		//model.addAttribute("USER", user);
+
 		return "ws0";
-	}
-	
-	@RequestMapping(value = "/ws/{USER}", method = RequestMethod.GET)
-	public String ws(@PathVariable("USER")String user, HttpSession session, Model model){
-		
-		//session.setAttribute("USER", user);
-		model.addAttribute("USER", user);
-		return "ws";
 	}
 	
 	@RequestMapping(value = "/ws/broadcast", method = RequestMethod.POST)
@@ -155,7 +144,7 @@ public class HomeController implements ApplicationContextAware{
 
 	@RequestMapping(value = "/ws/{USER}", method = RequestMethod.POST, consumes="application/json")
 	@ResponseBody
-	public String broadcast(@RequestBody Captcha message, @PathVariable("USER") String user) throws IOException{
+	public String sendUser(@RequestBody Captcha message, @PathVariable("USER") String user) throws IOException{
 
 		this.wsEndpoint.send2User(message, user);
 		return "broadcast";
@@ -190,16 +179,20 @@ public class HomeController implements ApplicationContextAware{
 		logger.info(String.format("receive Request {'uid':%s}", uid));
 		try{
 			
-			String base64Captcha = new sun.misc.BASE64Encoder().encodeBuffer(captcha.getBytes());
-			String base64Tip = new sun.misc.BASE64Encoder().encodeBuffer(tip.getBytes());
-			base64Captcha = Base64.byteArrayToBase64(captcha.getBytes());
-			base64Tip = Base64.byteArrayToBase64(tip.getBytes());
+			String base64Captcha = Base64.byteArrayToBase64(captcha.getBytes());
+			String base64Tip = Base64.byteArrayToBase64(tip.getBytes());
 			
 			Captcha captchaCommand = new Captcha();
 			captchaCommand.setUid(uid);
 			captchaCommand.setCaptcha(base64Captcha);
 			captchaCommand.setTip(base64Tip);
-			this.wsEndpoint.dispatch(captchaCommand);
+			
+			//轮询
+			//this.wsEndpoint.dispatch(captchaCommand);
+			
+			//ready用户优先
+			JmsTemplate sender = (JmsTemplate)this.ctx.getBean("jmsTemplate.request.producer");
+			sender.convertAndSend(captchaCommand);
 
 			String selector = String.format("from='%s'", uid);
 			JmsTemplate jmsTemplate = (JmsTemplate)this.ctx.getBean("jmsTemplate");

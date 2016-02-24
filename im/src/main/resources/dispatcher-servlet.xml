@@ -9,12 +9,27 @@
         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
 	<mvc:annotation-driven />
-	<context:component-scan base-package="com.gerrydevstory.stockticker" />
+	<!--<context:component-scan base-package="com.gerrydevstory.stockticker" />-->
 	<context:component-scan base-package="demo.im.dwr" />
+	<context:component-scan base-package="demo.captcha" />
 	
 	<!--
 	<mvc:resources mapping="/resources/**" location="/resources/" />
 	-->
+	<bean id="websocket" class="demo.captcha.SocketHandler">
+		<property name="processor" ref="processor"/>
+    </bean>
+    
+    
+	<bean class="demo.captcha.firstready.Processor" id="processor">
+		<property name="responseReceiver" ref="jmsTemplate"/>
+		<property name="requestSender" ref="jmsTemplate.request.producer"/>
+	</bean>
+	
+	
+	<!-- <bean class="demo.captcha.roundrobin.Processor" id="processor">
+		<property name="responseReceiver" ref="jmsTemplate"/>
+	</bean> -->
 	
 	<!-- 支持上传文件 -->  
     <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/>
@@ -69,9 +84,24 @@
 	</bean>
 	 -->
 	 
+	<!-- 配置线程池 -->
+	<bean id="taskExecutor"
+		class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+		<!-- 线程池维护线程的最少数量 -->
+		<property name="corePoolSize" value="15" />
+		<!-- 线程池维护线程所允许的空闲时间 -->
+		<property name="keepAliveSeconds" value="30000" />
+		<!-- 线程池维护线程的最大数量 -->
+		<property name="maxPoolSize" value="50" />
+		<!-- 线程池所使用的缓冲队列 -->
+		<property name="queueCapacity" value="200" />
+	</bean>
 	 
-    <bean id="websocket" class="com.gerrydevstory.stockticker.WebsocketEndPoint"/>  
-      
+	<!-- 
+    <bean id="websocket" class="com.gerrydevstory.stockticker.WebsocketEndPoint">
+    </bean>
+    -->
+    
     <websocket:handlers>  
         <websocket:mapping path="/websocket" handler="websocket"/>  
         <websocket:handshake-interceptors>  

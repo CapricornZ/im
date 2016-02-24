@@ -1,89 +1,76 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:aop="http://www.springframework.org/schema/aop"
-	xmlns:tx="http://www.springframework.org/schema/tx"
-	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:util="http://www.springframework.org/schema/util"
 	xmlns:context="http://www.springframework.org/schema/context"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd   
         http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd        
         http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd        
         http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd        
         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+        
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">  
+        <property name="fileEncoding" value="UTF8" />   
+        <property name="locations">
+            <list>
+            	<value>classpath:im.properties</value>
+            </list>  
+        </property>  
+    </bean>
+
+	<bean id="queueConnectionFactory" class="org.apache.activemq.spring.ActiveMQConnectionFactory">
+		<property name="brokerURL" value="${JMS.URL}" />
+		<property name="useAsyncSend" value="true" />
+		<property name="maxThreadPoolSize" value="150"/>
+	</bean>
+
+	<bean id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory">
+		<property name="connectionFactory" ref="queueConnectionFactory"/>
+	</bean>
 	
-	<!--
-	<bean id="admins" class="org.apache.activemq.security.AuthenticationUser">  
-        <constructor-arg index="0" value="admin" />  
-        <constructor-arg index="1" value="password" />  
-        <constructor-arg index="2" value="admins,publishers,consumers" />  
-    </bean>  
-    <bean id="publishers" class="org.apache.activemq.security.AuthenticationUser">  
-        <constructor-arg index="0" value="publisher" />  
-        <constructor-arg index="1" value="password" />  
-        <constructor-arg index="2" value="publishers,consumers" />  
-    </bean>  
-    <bean id="consumers" class="org.apache.activemq.security.AuthenticationUser">  
-        <constructor-arg index="0" value="consumer" />  
-        <constructor-arg index="1" value="password" />  
-        <constructor-arg index="2" value="consumers" />  
-    </bean>  
-    <bean id="guests" class="org.apache.activemq.security.AuthenticationUser">  
-        <constructor-arg index="0" value="guest" />  
-        <constructor-arg index="1" value="password" />  
-        <constructor-arg index="2" value="guests" />  
-    </bean>  
-    <bean id="simpleAuthPlugin" class="org.apache.activemq.security.SimpleAuthenticationPlugin">  
-        <property name="users">  
-            <list>  
-                <ref bean="admins" />  
-                <ref bean="publishers" />  
-                <ref bean="consumers" />  
-                <ref bean="guests" />  
-            </list>  
-        </property>  
-    </bean>  
-    <bean id="broker" class="org.apache.activemq.broker.BrokerService" init-method="start" destroy-method="stop">  
-        <property name="brokerName" value="myBroker" />  
-        <property name="persistent" value="false" />  
-        <property name="transportConnectorURIs">  
-            <list>  
-                <value>tcp://localhost:61616</value>  
-            </list>  
-        </property>  
-        <property name="plugins">  
-            <list>  
-                <ref bean="simpleAuthPlugin" />  
-            </list>  
-        </property>  
-    </bean>
-    -->
-    
-	<bean id="queueConnectionFactory" class="org.apache.activemq.spring.ActiveMQConnectionFactory">  
-        <property name="brokerURL" value="tcp://localhost:61616" />
-        <property name="useAsyncSend" value="true" />
-    </bean>
-    
-    <bean id="destination" class="org.apache.activemq.command.ActiveMQQueue">
-        <constructor-arg value="RESULT" />
-    </bean>
-    
-    <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate" scope="prototype">  
-        <property name="connectionFactory" ref="queueConnectionFactory"/>
-        <property name="defaultDestination" ref="destination"/>
-        <property name="pubSubDomain" value="false" />
-        <property name="explicitQosEnabled" value="true" />
-        <property name="timeToLive" value="30000" />
-        <property name="receiveTimeout" value="30000" />
-    </bean>
-    
-    <bean id="messageService" class="demo.im.dwr.MessageService">
-    	<property name="jmsTemplate" ref="jmsTemplate"/>
-    	<property name="chatManager" ref="chatManager"/>
-    </bean>
-    
-    <bean id="chatManager" class="demo.im.dwr.ChatManager">
-    </bean>
-    
-    <bean id="messageListener" class="demo.im.dwr.MessageClient">
-    </bean>
+	<bean id="destination.response" class="org.apache.activemq.command.ActiveMQQueue">
+		<constructor-arg value="${QUEUE.RESPONSE}" />
+	</bean>
+
+	<bean id="destination.request" class="org.apache.activemq.command.ActiveMQQueue">
+		<constructor-arg value="${QUEUE.REQUEST}" />
+	</bean>
+	
+	<bean id="captchaConverter" class="demo.captcha.message.CaptchaConvert"/>
+
+	<!-- captcha来的时候，请求生产者 -->
+	<bean id="jmsTemplate.request.producer" class="org.springframework.jms.core.JmsTemplate">
+		<property name="connectionFactory" ref="pooledConnectionFactory" />
+		<property name="defaultDestination" ref="destination.request" />
+		<property name="messageConverter" ref="captchaConverter"/>
+		<property name="pubSubDomain" value="false" />
+	</bean>
+
+	<!-- captcha来的时候，请求消费者 -->
+	<bean id="jmsTemplate.request.consumer" class="org.springframework.jms.core.JmsTemplate" scope="prototype">
+		<property name="connectionFactory" ref="pooledConnectionFactory" />
+		<property name="defaultDestination" ref="destination.request" />
+		<property name="messageConverter" ref="captchaConverter"/>
+		<property name="pubSubDomain" value="false" />
+	</bean>
+
+	<bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate" scope="prototype">
+		<property name="connectionFactory" ref="pooledConnectionFactory" />
+		<property name="defaultDestination" ref="destination.response" />
+		<property name="pubSubDomain" value="false" />
+		<property name="explicitQosEnabled" value="true" />
+		<property name="timeToLive" value="${QUEUE.RESPONES.timeToLive}" />
+		<property name="receiveTimeout" value="${QUEUE.RESPONES.receiveTimeout}" />
+	</bean>
+
+	<bean id="messageService" class="demo.im.dwr.MessageService">
+		<property name="jmsTemplate" ref="jmsTemplate" />
+		<property name="chatManager" ref="chatManager" />
+	</bean>
+
+	<bean id="chatManager" class="demo.im.dwr.ChatManager">
+	</bean>
+
+	<bean id="messageListener" class="demo.im.dwr.MessageClient">
+	</bean>
 </beans>

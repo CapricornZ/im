@@ -15,6 +15,8 @@
 		<script type="text/javascript" src="${ContextPath}/resources/bootstrap.js"></script>
 		<script type="text/javascript" src="${ContextPath}/resources/bootstrap-switch.js"></script>
 		
+		<script type="text/javascript" src="${ContextPath}/resources/date.js"></script>
+		
 		<script type="text/javascript">
 			var ws = null;
 			var url = '${ContextPath}/web/websocket';
@@ -27,47 +29,16 @@
 			var queue = new Array();
 			var isReady = false;
 			
-			Date.prototype.pattern=function(fmt) {
-				var o = {         
-				    "M+" : this.getMonth()+1, //月份         
-				    "d+" : this.getDate(), //日         
-				    "h+" : this.getHours()%12 == 0 ? 12 : this.getHours()%12, //小时         
-				    "H+" : this.getHours(), //小时         
-				    "m+" : this.getMinutes(), //分         
-				    "s+" : this.getSeconds(), //秒         
-				    "q+" : Math.floor((this.getMonth()+3)/3), //季度         
-				    "S" : (1000 + this.getMilliseconds() + "").substring(1) //毫秒
-				};         
-			    var week = {         
-				    "0" : "/u65e5",         
-				    "1" : "/u4e00",         
-				    "2" : "/u4e8c",         
-				    "3" : "/u4e09",         
-				    "4" : "/u56db",         
-				    "5" : "/u4e94",         
-				    "6" : "/u516d"        
-				};         
-			    if(/(y+)/.test(fmt)){         
-			        fmt=fmt.replace(RegExp.$1, (this.getFullYear()+"").substr(4 - RegExp.$1.length));         
-			    }         
-			    if(/(E+)/.test(fmt)){         
-			        fmt=fmt.replace(RegExp.$1, ((RegExp.$1.length>1) ? (RegExp.$1.length>2 ? "/u661f/u671f" : "/u5468") : "")+week[this.getDay()+""]);         
-			    }         
-			    for(var k in o){         
-			        if(new RegExp("("+ k +")").test(fmt)){         
-			            fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));         
-			        }         
-			    }         
-			    return fmt;         
-			}
-			
 			function setConnected(connected) {
 		    
 		        document.getElementById('connect').disabled = connected;
 		        document.getElementById('disconnect').disabled = !connected;
 		        document.getElementById('echo').disabled = !connected;
 		        $('#message').attr('disabled', !connected);
-		        $("#status").html(connected ? "在线！" : "离线！");
+		        if(!connected)
+		        	$("#status").html("<img src='${ContextPath}/resources/img/offline.ico'></img>离线！");
+		        else
+		        	$("#status").html("<img src='${ContextPath}/resources/img/online.ico'></img>在线！");
 		    }
 		    
 		    function connect() {
@@ -91,10 +62,10 @@
 				};  
 				
 				ws.onmessage = function (event) {
-		
+
 					var json = JSON.parse(event.data);
 					console.log(json);
-					
+
 					if(json.category == 'MESSAGE'){
 						log('[RECV] : ' + json.content, 'green');
 						$.notify(json.content, "warn");
@@ -102,8 +73,6 @@
 						
 					if(json.category == 'CAPTCHA'){
 						
-						//$.notify("新验证码", "warn");
-						//log('[BIZ ] : 新的验证码请求 time:' + json.time);
 						logCaptcha('[BIZ ] : 新的验证码请求 time:' + json.time, json);
 						queue.push(json);
 						if(isReady){
@@ -118,7 +87,6 @@
 				ws.onclose = function (event) {
 					setConnected(false);
 					log('[INFO] : connection closed.', 'red');
-					//log(event);
 				};  
 			}  
 		      
@@ -146,6 +114,9 @@
 			
 			function renderCaptcha(captcha){
 			
+				var total = parseInt($("#FINISH").html()) + 1;
+		    	$("#FINISH").html(total);
+				    	
 				$('#uid').html(captcha.uid);
 				$('#tip').attr('src', 'data:image/jpeg;base64,' + captcha.tip);
 				$('#captcha').attr('src',"");
@@ -161,7 +132,7 @@
 		    	var code = $('#inputCaptcha').val();
 		    	if(uid != '' && code != "")
 		        	$.ajax({
-						url  : "${ContextPath}/web/home/response/" + uid,
+						url  : "response/" + uid,
 						type : 'POST',
 						data : code,
 						contentType: 'application/json; charset=utf-8',
@@ -218,12 +189,12 @@
 		            document.getElementById('sockJsTransportSelect').style.visibility = 'visible';  
 		        } else {
 		          
-		          if (window.location.protocol == 'http:') {  
-		              url = 'ws://' + window.location.host + urlPath;  
-		          } else {  
-		              url = 'wss://' + window.location.host + urlPath;  
-		          }  
-		          document.getElementById('sockJsTransportSelect').style.visibility = 'hidden';  
+			          if (window.location.protocol == 'http:') {  
+			              url = 'ws://' + window.location.host + urlPath;  
+			          } else {  
+			              url = 'wss://' + window.location.host + urlPath;  
+			          }  
+			          document.getElementById('sockJsTransportSelect').style.visibility = 'hidden';  
 		        }  
 		    }  
 		      
@@ -261,7 +232,7 @@
 		    	stompClient = Stomp.over(socket);
 		    	stompClient.connect("guest", "guest", connectCallback, errorCallback);
 		    
-		    	$('body').everyTime('1s','A',function(){ $('#TIMER').html(new Date().pattern("yyyy-MM-dd HH:mm:ss")); });
+		    	$('body').everyTime('1s','A',function(){ $('#TIMER').html(new Date().pattern("yyyy-MM-dd HH:mm:ss.S")); });
 		    
 		    	if (window.location.protocol == 'http:') {
 		    		url = 'ws://' + window.location.host + url;
@@ -295,9 +266,12 @@
 			      	for(var i=0; i< users.length; i++){
 			      		$('#users').append("<p style='word-wrap: break-word;margin:0 0 0 0;'>"+users[i]+"</p>");
 			      	}
+			      	$('#onlineUsers').html("在线用户：" + new Date().pattern("HH:mm:ss.S"));
 				});
 		    };
-		    var errorCallback = function(error) { alert(error.headers.message); };
+		    var errorCallback = function(error) { 
+		    	alert(error); 
+		    };
 		</script>
 	</head>
 	
@@ -310,7 +284,7 @@
 
 					<button id="connect" onclick="connect();" class="btn btn-primary" style="margin-top: 10px;">Connect</button>
 					<button id="disconnect" disabled="" onclick="disconnect();" class="btn btn-primary" style="margin-top: 10px;">Disconnect</button><br/>
-					<span id="status">离线！</span>
+					<span id="status"><img src="${ContextPath}/resources/img/offline.ico"></img>离线！</span>
 				</div>
 				<div style="margin-top: 10px;">
 					<textarea id="message" style="height: 100px;" disabled="">输入消息...</textarea>
@@ -327,15 +301,17 @@
 			
 			<!--<div class="col-sm-5" style="width:500px;background: no-repeat url(../../images/bids.bmp);">-->
 			<div class="col-lg-3" style="text-align:center;width:500px;height:330px;margin-left: 10px;padding-top: 10px; background: no-repeat url(${ContextPath}/resources/img/bids.bmp);">
-				<p style="margin-top:15px ; margin-bottom:10px;margin-right: 50px; text-align:right;">
-					<span id="SPANQ">QUEUE<span id='QUEUE' class="badge">0</span></span>
+				<p style="margin-top:8px ; margin-bottom:10px;margin-right: 50px; text-align:right;">
+					<span id="SPANQ">QUEUE<span id='QUEUE' class="badge">?</span></span>
+					<br/>
+					<span id="SPANQ">FINISH<span id='FINISH' class="badge">0</span></span>
 				</p>
 				<p style="text-align:center;">
 					<label style="margin-top:20px;" id="TIMER">2016-02-11 19:45:20</label>
 				</p>
 				<p style="text-align:center;">
-					<span style="height:48px;width:200px;color:red;font-size:large;margin-bottom:10px;border:2px solid #000000;text-align:center;display:inline-block;">
-						<img id="captcha" alt="验证码图片在此!" height="48" border="2"/>
+					<span style="height:52px;width:200px;color:red;font-size:large;margin-bottom:10px;border:2px solid #000000;text-align:center;display:inline-block;">
+						<img id="captcha" alt="验证码图片在此!" height="52" border="2"/>
 					</span>
 				</p>
 				<p style="color:red;font-size:large;margin-bottom:10px;">
@@ -354,7 +330,7 @@
 			<div class="col-lg-4" style="margin-left: 10px;">
 				<div id="console" style="border: 1px solid #CCCCCC; height:170px; overflow-y: scroll;"></div>
 				<div class="row">
-					<div class="col-lg-8">在线用户：</div>
+					<div class="col-lg-8" id="onlineUsers">在线用户：</div>
 					<div class="col-lg-4" style="text-align:right;"><button class="btn" onclick='$("#console").html("");'>clear^</button></div>
 				</div>
 				<div id="users" style="border: 1px solid #CCCCCC; overflow-y: scroll; height:50px;"></div>

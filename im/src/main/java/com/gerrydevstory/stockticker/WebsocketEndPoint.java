@@ -6,7 +6,10 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.socket.BinaryMessage;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -16,17 +19,24 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import demo.im.rs.entity.Ready;
+import demo.captcha.message.Consumer;
 import demo.im.rs.entity.Command;
 import demo.im.rs.entity.CommandAdapter;
-import demo.im.rs.entity.Message;
 
-public class WebsocketEndPoint extends TextWebSocketHandler {
+public class WebsocketEndPoint extends TextWebSocketHandler implements ApplicationContextAware{
 
 	static public final String USER = "USER";
 	
 	private static final Logger logger = LoggerFactory.getLogger(WebsocketEndPoint.class);
 	private List<WebSocketSession> sessions = new ArrayList<WebSocketSession>();
+	private List<Consumer> clients = new ArrayList<Consumer>();
 	private int current = 0;
+	
+	private ApplicationContext ctx;
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		this.ctx = applicationContext;
+	}
 	
 	public List<String> getActiveUsers(){
 		List<String> rtn = new ArrayList<String>();
@@ -53,6 +63,13 @@ public class WebsocketEndPoint extends TextWebSocketHandler {
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
 
 		logger.debug("connection({}) lost......", session.getAttributes().get(USER));
+		for(int i=this.clients.size()-1; i>=0; i--){
+			Consumer client = (Consumer)this.clients.get(i);
+			if(client.getUser().equals(session.getAttributes().get(USER))){
+				this.clients.remove(i);
+				client.stop();
+			}
+		}
 		sessions.remove(session);
 		super.afterConnectionClosed(session, status);
 	}
@@ -62,28 +79,30 @@ public class WebsocketEndPoint extends TextWebSocketHandler {
 
 		logger.info("handleMessage({})", session.getAttributes().get(USER) == null ? "DEFAULT USER" : session.getAttributes().get(USER));
 		super.handleTextMessage(session, message);
-		
-		//Ready ack = new com.google.gson.Gson().fromJson(message.getPayload(), Ready.class);
 
 		Gson gson = new GsonBuilder().registerTypeAdapter(Command.class, new CommandAdapter()).create();
 	    Command ack = gson.fromJson(message.getPayload(), Command.class);
 	    
+	    logger.info("handleMessage({})", ack.getCategory());
 		if("READY".equals(ack.getCategory())){//ready
 			
 			Ready ready = (Ready)ack;
 			session.getAttributes().put(USER, ready.getUser());
 			logger.info("{} isReady", session.getAttributes().get(USER));
+			
+			//如果设置为轮询，下面的代码不需要
+			JmsTemplate jmsTemplate = (JmsTemplate)this.ctx.getBean("jmsTemplate.request.consumer");
+			Consumer client = new Consumer(jmsTemplate, session);
+			this.clients.add(client);
+			client.ready();
 		}
 		if("MESSAGE".equals(ack.getCategory())){
-          
-			logger.info("handleMessage(ECHO)", ack.getCategory());
-			Message msg = (Message)ack;
+
 	        TextMessage returnMessage = new TextMessage(message.getPayload());
-	        BinaryMessage binMsg = new BinaryMessage(new byte[]{ 0,2,4,6,8 });
 	        for(WebSocketSession sess : this.sessions){
 	        	sess.sendMessage(returnMessage);
-	        	//sess.sendMessage(binMsg);
 	        }
+	        logger.info("\"{}\" broadCast", message.getPayload());
 		}
     }
 	
@@ -104,12 +123,16 @@ public class WebsocketEndPoint extends TextWebSocketHandler {
 				session.sendMessage(msg);
 	}
 	
+	/***
+	 * 轮询
+	 * @param command
+	 * @throws IOException
+	 */
 	public void dispatch(Command command) throws IOException{
-		
+
 		GsonBuilder gson = new GsonBuilder();
 		gson.setDateFormat("HH:mm:ss");
 		String message = gson.create().toJson(command);
-		//String message = new com.google.gson.Gson().toJson(command);
 		TextMessage msg = new TextMessage(message.getBytes());
 		if(this.sessions.size() > 0){
 			
