@@ -27,7 +27,6 @@ import com.alibaba.druid.util.Base64;
 
 import demo.im.rs.entity.Captcha;
 
-
 @RequestMapping(value = "/captcha")
 @Controller
 public class CaptchaController {
@@ -47,7 +46,7 @@ public class CaptchaController {
 	
 	@PostConstruct
 	private void broadcastTimePeriodically() throws Exception {
-		scheduler.scheduleAtFixedRate(new BroadCast(this.sessionRepository), 5000);
+		scheduler.scheduleAtFixedRate(new BroadCast(this.sessionRepository), 30000);
 	}
 	
 	private static final Logger logger = LoggerFactory.getLogger(CaptchaController.class);
@@ -62,6 +61,7 @@ public class CaptchaController {
 		
 	@RequestMapping(value = "/", method = RequestMethod.GET)
 	public String home() {
+		
 		return "ws0";
 	}
 	

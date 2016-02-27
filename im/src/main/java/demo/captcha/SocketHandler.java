@@ -3,7 +3,8 @@ package demo.captcha;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Resource;
+import javax.jms.JMSException;
+import javax.jms.Session;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.core.MessageCreator;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -27,6 +29,7 @@ import demo.captcha.message.Consumer;
 import demo.im.rs.entity.Command;
 import demo.im.rs.entity.CommandAdapter;
 import demo.im.rs.entity.Ready;
+import demo.im.rs.entity.Reply;
 
 public class SocketHandler extends TextWebSocketHandler implements IRepository, ApplicationContextAware {
 
@@ -38,11 +41,15 @@ public class SocketHandler extends TextWebSocketHandler implements IRepository, 
 		this.ctx = applicationContext;
 	}
 	
-	@Resource(name="processor")
 	private IProcessor processor;
 	public void setProcessor(IProcessor processor){ 
 		this.processor = processor;
 		this.processor.setConsumerRepo(this);
+	}
+	
+	private JmsTemplate jmsTemplate;
+	public void setJmsReply(JmsTemplate jms){
+		this.jmsTemplate = jms;
 	}
 	
 	private int current = 0;
@@ -109,6 +116,25 @@ public class SocketHandler extends TextWebSocketHandler implements IRepository, 
 				if(consumer.getSession().equals(session))
 					consumer.ready();
 			}
+		}
+		if("REPLY".equals(ack.getCategory())){//reply
+			
+			final Reply reply = (Reply)ack;
+			logger.info(String.format("receive Response {CAPTCHA:'%s', TO:'%s'}", reply.getCode(), reply.getUid()));
+			
+			MessageCreator messageCreator = new MessageCreator() {
+				@Override
+				public javax.jms.Message createMessage(Session session) throws JMSException {
+					
+					javax.jms.TextMessage message = session.createTextMessage();
+					message.setText(reply.getCode());
+					message.setStringProperty("from", reply.getUid());
+					return message;
+				}
+			};
+			
+			this.jmsTemplate.send(messageCreator);
+			
 		}
 		if("MESSAGE".equals(ack.getCategory())){
 

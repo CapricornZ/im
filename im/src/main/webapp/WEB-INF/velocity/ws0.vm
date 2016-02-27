@@ -130,8 +130,8 @@
 				
 				var uid = $('#uid').html();
 		    	var code = $('#inputCaptcha').val();
-		    	if(uid != '' && code != "")
-		        	$.ajax({
+		    	if(uid != '' && code != ""){
+		        	/*$.ajax({
 						url  : "response/" + uid,
 						type : 'POST',
 						data : code,
@@ -146,12 +146,23 @@
 			            	console.log("error");
 			            	imReady(); 
 			            }
-					});
-				else
+					});*/
+					
+					if (ws != null) {
+					
+						var ack = { "category":"REPLY", "uid":uid, "code":code };
+						ws.send(JSON.stringify(ack));
+						imReady();
+					
+					} else {
+						alert('connection not established, please connect.');
+					}
+				}else
 					imReady();
 			}
 			
 			function setDelayMS(){
+			
 				delay = parseInt($("#inputDelay").val());
 				$("#spanDelay").html(delay);
 			}
@@ -299,14 +310,14 @@
 				</div>
 			</div>
 			
-			<div class="col-lg-3">
+			<div class="col-lg-5">
 				<div class="panel panel-default">
 	  				<div class="panel-heading">
 	  					<div class="row">
 	  						<div class="col-sm-8"><h5 class="panel-title">校验码输入</h5></div>
 	  						<div class="col-sm-4" style="text-align:right;">
-	  							<span id="SPANQ">QUEUE<span id='QUEUE' class="badge">00</span></span><br/>
-	  							<span id="SPANF">本次完成<span id="FINISH" class="badge">00</span></span>
+	  							<span id="SPANQ">QUEUE<span id='QUEUE' class="badge">0</span></span><br/>
+	  							<span id="SPANF">本次完成<span id="FINISH" class="badge">0</span></span>
 	  						</div>
 	  					</div>
 	  				</div>
@@ -381,7 +392,7 @@
 				<div id="console" style="border: 1px solid #CCCCCC; height:170px; overflow-y: scroll;"></div>
 				<div class="row">
 					<div class="col-lg-8" id="onlineUsers">在线用户：</div>
-					<div class="col-lg-4" style="text-align:right;"><button class="btn" onclick='$("#console").html("");'>clear^</button></div>
+					<div class="col-lg-4" style="text-align:right;"><button class="btn" onclick='$("#console").html("");$("#FINISH").html("0");'>clear^</button></div>
 				</div>
 				<div id="users" style="border: 1px solid #CCCCCC; overflow-y: scroll; height:50px;"></div>
 			</div>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd   
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd        
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd        
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd        
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+	<bean id="simulator2" class="demo.captcha.simulate.Simulator2">
+		<property name="repository" value="classpath:repository"/>
+	</bean>
+	
+	<bean id="simulator" class="demo.captcha.simulate.Simulator">
+		<property name="repository">
+			<list>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/0077-36.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/0981-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/1016-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/1102-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/1378-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/1702-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/1724-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/1725-36.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/1737-36.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/1824-36.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/1997-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/2058-36.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/2128-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/3079-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/3280-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/3422-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/3477-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/3630-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/3796-36.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/4032-36.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/4328-36.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/4407-36.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/5991-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/6110-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/6187-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/6191-36.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/6228-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/6436-36.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/6481-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/6489-36.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/6778-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/7092-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/7347-36.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/7375-36.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/7598-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/7871-14.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/8172-36.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/8763-14.jpg</value>
+				
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/002610.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/104242.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/116439.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/224494.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/458717.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/567454.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/684296.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/721922.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/786094.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/822856.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/915420.jpg</value>
+				<value>http://moni.oss-cn-hangzhou.aliyuncs.com/yzm2/935854.jpg</value>
+			</list>
+		</property>
+		<property name="tips">
+			<list>
+				<value>tip1.png</value>
+				<value>tip2.png</value>
+				<value>tip4.png</value>
+			</list>
+		</property>
+	</bean>
+</beans>

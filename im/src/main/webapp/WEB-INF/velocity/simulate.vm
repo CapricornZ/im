@@ -1,0 +1,151 @@
+#set( $ContextPath = ${request.contextPath} )
+
+<html>
+	<head>
+		<title>校验码测试</title>
+		<link type="text/css" href="${ContextPath}/resources/css/bootstrap.min.css" rel="stylesheet"/>
+		<link type="text/css" href="${ContextPath}/resources/css/bootstrap-switch.min.css" rel="stylesheet"/>
+		
+		<script type="text/javascript" src="${ContextPath}/resources/sockjs-0.3.min.js"></script>
+		<script type="text/javascript" src="${ContextPath}/resources/jquery-1.11.2.min.js"></script>
+		<script type="text/javascript" src="${ContextPath}/resources/jquery.timers.js"></script>
+		<script type="text/javascript" src="${ContextPath}/resources/notify.js"></script>
+		<script type="text/javascript" src="${ContextPath}/resources/binary.min.js"></script>
+		<script type="text/javascript" src="${ContextPath}/resources/stomp.js"></script>
+		
+		<script type="text/javascript" src="${ContextPath}/resources/bootstrap.js"></script>
+		<script type="text/javascript" src="${ContextPath}/resources/bootstrap-switch.js"></script>
+		<script type="text/javascript" src="${ContextPath}/resources/jquery.bootstrap.min.js"></script>
+		
+		<script type="text/javascript" src="${ContextPath}/resources/date.js"></script>
+		<script>
+			$(function(){
+				refresh();
+			});
+			
+			function appendTR(){
+
+				var tr = $("<tr><td><img/></td><td><img/></td><td></td></tr>");
+				$('#repo tbody').append(tr);
+				load(tr);
+			}
+			
+			function removeTR(){
+				
+				$('#repo tbody tr:last').remove();
+			}
+			
+			function load(tr){
+
+				var elemCaptcha = tr.children(":eq(0)").children(":eq(0)");
+				var elemTip = tr.children(":eq(1)").children(":eq(0)");
+				var elemResult = tr.children(":eq(2)");
+				elemResult.html("<img src='${ContextPath}/resources/img/refresh.gif'/>");
+				
+				$.ajax({
+					url  : "captcha",
+					type : 'GET',
+					success: function(json) {
+						elemCaptcha.attr("src", "data:image/jpeg;base64," + json.captcha);
+						elemTip.attr("src", "data:image/jpeg;base64," + json.tip);
+						tr.attr("uid", json.uid);
+						tr.attr("val", json.value);
+						elemResult.html("");
+					},error: function (data) {
+				        elemResult.html("LOAD ERROR!");
+				    }
+				});
+			}
+			
+			function refresh(){
+			
+				$('#repo tbody tr').each(function(){
+					
+					var elemTR = $(this);
+					load(elemTR);
+				});
+			}
+			
+			function fetch(){
+				$.ajax({
+					url  : "fetch",
+					type : 'POST',
+					contentType:'application/json;charset=UTF-8', 
+					success: function(json) {
+						alert("SUCCESS");
+					}
+				});
+			}
+			
+			function fire(){
+				$.messager.model = {
+					ok:{ text: "确定", classed: 'btn-default' },
+					cancel: { text: "取消", classed: 'btn-error' }
+				};
+				$.messager.confirm("确定", "发送校验码测试？", function() {
+					
+					$('#repo tbody tr').each(function(){
+						
+						var elemTR = $(this);
+						var elemCaptcha = $(this).children(":eq(0)").children(":eq(0)");
+						var elemTip = $(this).children(":eq(1)").children(":eq(0)");
+						var elemResult = $(this).children(":eq(2)");elemResult.html("");
+						
+						var data = {
+							'captcha':elemCaptcha.attr("src").substring("data:image/jpeg;base64,".length),
+							'tip':elemTip.attr("src").substring("data:image/jpeg;base64,".length)
+						};
+						$.ajax({
+							url  : "request/" + elemTR.attr('uid'),
+							type : 'POST',
+							contentType:'application/json;charset=UTF-8', 
+							data : JSON.stringify(data),
+							beforeSend: function(){
+								elemResult.html("<img src='${ContextPath}/resources/img/refresh.gif'/>");
+							},
+							success: function(json) {
+								var val = elemTR.attr('val');
+								if(val == json){
+									elemResult.html("<img src='${ContextPath}/resources/img/OK.jpg' height='24'/>" + json);
+								} else {
+									elemResult.html("<img src='${ContextPath}/resources/img/Error.jpg' height='24'/>" + json);
+								}
+							}
+						});
+					});
+				});
+			}
+		</script>
+	</head>
+	<body>
+		<div class="row">
+			<div class="col-sm-3"></div>
+			<div class="col-sm-6">
+				<table id="repo" class="table">
+				<thead>
+					<tr>
+						<th>校验码
+							<button class="btn btn-xs" onclick="return appendTR();">+</button>
+							<button class="btn btn-xs" onclick="return removeTR();">-</button>
+						</th>
+						<th>校验码提示</th>
+						<th>结果</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr><td><img/></td><td><img/></td><td></td></tr>
+					<tr><td><img/></td><td><img/></td><td></td></tr>
+					<tr><td><img/></td><td><img/></td><td></td></tr>
+					<tr><td><img/></td><td><img/></td><td></td></tr>
+					<tr><td><img/></td><td><img/></td><td></td></tr>
+				</tbody>
+			</table>
+
+			<button class="btn btn-primary" onclick="return refresh();">refresh</button>
+			<button class="btn btn-danger" onclick="return fire();">fire</button>
+			<button class="btn btn-danger" onclick="return fetch();">fetch</button>
+			</div>
+			<div class="col-sm-3"></div>
+		</div>
+	</body>
+</html>

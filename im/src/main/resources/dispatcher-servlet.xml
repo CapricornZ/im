@@ -18,18 +18,19 @@
 	-->
 	<bean id="websocket" class="demo.captcha.SocketHandler">
 		<property name="processor" ref="processor"/>
+		<property name="jmsReply" ref="jmsTemplate"/>
     </bean>
-    
-    
+
 	<bean class="demo.captcha.firstready.Processor" id="processor">
 		<property name="responseReceiver" ref="jmsTemplate"/>
 		<property name="requestSender" ref="jmsTemplate.request.producer"/>
 	</bean>
 	
-	
-	<!-- <bean class="demo.captcha.roundrobin.Processor" id="processor">
+	<!--	
+	<bean class="demo.captcha.roundrobin.Processor" id="processor">
 		<property name="responseReceiver" ref="jmsTemplate"/>
-	</bean> -->
+	</bean>
+	-->
 	
 	<!-- 支持上传文件 -->  
     <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/>

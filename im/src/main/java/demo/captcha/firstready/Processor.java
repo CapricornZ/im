@@ -2,9 +2,6 @@ package demo.captcha.firstready;
 
 import java.io.IOException;
 
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -17,14 +14,8 @@ import demo.im.rs.entity.Captcha;
  * @author martin
  *
  */
-public class Processor extends IProcessor implements ApplicationContextAware{
+public class Processor extends IProcessor {
 	
-	private ApplicationContext ctx;
-	@Override
-	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-		this.ctx = applicationContext;
-	}
-
 	private JmsTemplate requestSender;
 	public void setRequestSender(JmsTemplate jms){ this.requestSender = jms; }
 	
