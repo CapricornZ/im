@@ -46,6 +46,7 @@
 					url  : "captcha",
 					type : 'GET',
 					success: function(json) {
+					
 						elemCaptcha.attr("src", "data:image/jpeg;base64," + json.captcha);
 						elemTip.attr("src", "data:image/jpeg;base64," + json.tip);
 						tr.attr("uid", json.uid);
@@ -63,17 +64,6 @@
 					
 					var elemTR = $(this);
 					load(elemTR);
-				});
-			}
-			
-			function fetch(){
-				$.ajax({
-					url  : "fetch",
-					type : 'POST',
-					contentType:'application/json;charset=UTF-8', 
-					success: function(json) {
-						alert("SUCCESS");
-					}
 				});
 			}
 			
@@ -104,11 +94,22 @@
 								elemResult.html("<img src='${ContextPath}/resources/img/refresh.gif'/>");
 							},
 							success: function(json) {
-								var val = elemTR.attr('val');
-								if(val == json){
-									elemResult.html("<img src='${ContextPath}/resources/img/OK.jpg' height='24'/>" + json);
-								} else {
-									elemResult.html("<img src='${ContextPath}/resources/img/Error.jpg' height='24'/>" + json);
+							
+								console.log(json);
+								if( "REPLY" == json.category ){
+
+									var val = elemTR.attr('val');
+									if(val == json.code){
+										elemResult.html("<img src='${ContextPath}/resources/img/OK.jpg' height='20'/>" + json.code + " by [{0}]".format(json.operator));
+									} else {
+										elemResult.html("<img src='${ContextPath}/resources/img/Error.jpg' height='20'/>" + json.code + " by [{0}]".format(json.operator));
+									}
+								}
+								else if( "RETRY" == json.category ){
+									elemResult.html("<img src='${ContextPath}/resources/img/Error.jpg' height='20'/>RETRY" + " by [{0}]".format(json.operator));
+								}
+								else if( "OTHER" == json.category ){
+									elemResult.html("<img src='${ContextPath}/resources/img/Error.jpg' height='20'/>" + json.description);
 								}
 							}
 						});
@@ -143,7 +144,6 @@
 
 			<button class="btn btn-primary" onclick="return refresh();">refresh</button>
 			<button class="btn btn-danger" onclick="return fire();">fire</button>
-			<button class="btn btn-danger" onclick="return fetch();">fetch</button>
 			</div>
 			<div class="col-sm-3"></div>
 		</div>

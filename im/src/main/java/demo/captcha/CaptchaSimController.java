@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import demo.captcha.simulate.CaptchaReq;
 import demo.captcha.simulate.Simulator2;
 import demo.im.rs.entity.Captcha;
+import demo.im.rs.entity.Command;
+import demo.im.rs.entity.Other;
 
 @RequestMapping(value = "/captcha/test")
 @Controller
@@ -58,16 +60,9 @@ public class CaptchaSimController {
 	@ResponseBody
 	public CaptchaReq generateCaptcha(){
 		
-		logger.info(String.format("random CAPTCHA"));
+		logger.info("random CAPTCHA");
 		CaptchaReq rtn = new CaptchaReq();
 		try {
-			//byte[] tip = simulator.randomTip();
-			//byte[] captcha = simulator.randomCaptcha();
-			
-			//UUID uuid = UUID.randomUUID();
-			//rtn.setCaptcha(Base64.byteArrayToBase64(captcha));
-			//rtn.setTip(Base64.byteArrayToBase64(tip));
-			//rtn.setUid(uuid.toString());
 			rtn = this.simulator.generateCaptcha();
 
 		} catch (IOException e) {
@@ -77,11 +72,11 @@ public class CaptchaSimController {
 		return rtn;
 	}
 	
-	@RequestMapping(value = "/request/{uid}", method=RequestMethod.POST)
+	@RequestMapping(value = "/request/{uid}", method=RequestMethod.POST, produces = "application/json;charset=UTF-8")
 	@ResponseBody
-	public String message(@RequestBody CaptchaReq captchaReq, @PathVariable("uid") String uid){
+	public Command message(@RequestBody CaptchaReq captchaReq, @PathVariable("uid") String uid){
 		
-		logger.info(String.format("receive Request {'uid':%s}", uid));
+		logger.info("receive Request {'uid':'{}'}", uid);
 		try{
 			
 			Captcha captchaCommand = new Captcha();
@@ -90,13 +85,14 @@ public class CaptchaSimController {
 			captchaCommand.setTip(captchaReq.getTip());
 			
 			this.captchaProcessor.dispatch(captchaCommand);
-			String message = this.captchaProcessor.waitResp(uid);
+			Command message = this.captchaProcessor.waitCommand(uid);
 			if(null != message)
-				return (String)message;
+				return message;
 			
 		}catch(Exception ex){
 			ex.printStackTrace();
 		}
-		return "ERROR";
+		
+		return new Other("WAIT TIMEOUT");
 	}
 }

@@ -2,15 +2,11 @@ package demo.captcha;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import javax.jms.JMSException;
-import javax.jms.Session;
-import javax.jms.TextMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jms.core.JmsTemplate;
-import org.springframework.jms.core.MessageCreator;
+
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
@@ -26,6 +22,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.alibaba.druid.util.Base64;
 
 import demo.im.rs.entity.Captcha;
+import demo.im.rs.entity.Command;
+import demo.im.rs.entity.Other;
 
 @RequestMapping(value = "/captcha")
 @Controller
@@ -51,7 +49,6 @@ public class CaptchaController {
 	
 	private static final Logger logger = LoggerFactory.getLogger(CaptchaController.class);
 
-	@Autowired private JmsTemplate jmsTemplate;
 	@Autowired private SimpMessagingTemplate template;
 	@Autowired private SocketHandler sessionRepository;
 	
@@ -64,34 +61,14 @@ public class CaptchaController {
 		
 		return "ws0";
 	}
-	
-	@RequestMapping(value = "/response/{uid}",method=RequestMethod.POST)
-	@ResponseBody
-	public String replyMessage(@RequestBody final String captcha, @PathVariable("uid") final String uid){
 
-		logger.info(String.format("receive Response {CAPTCHA:'%s', TO:'%s'}", captcha, uid));
-		MessageCreator messageCreator = new MessageCreator() {
-			@Override
-			public javax.jms.Message createMessage(Session session) throws JMSException {
-				
-				TextMessage message = session.createTextMessage();
-				message.setText(captcha);
-				message.setStringProperty("from", uid);
-				return message;
-			}
-		};
-		
-		this.jmsTemplate.send(messageCreator);
-		return "SUCCESS";
-	}
-	
-	@RequestMapping(value = "/request", method=RequestMethod.POST)
+	@RequestMapping(value = "/request", method=RequestMethod.POST, produces = "application/json;charset=UTF-8")
 	@ResponseBody
-	public String message(@RequestParam("captchaImg") MultipartFile captcha,
+	public Command message(@RequestParam("captchaImg") MultipartFile captcha,
 			@RequestParam("tipImg") MultipartFile tip,
 			@RequestParam("uid") String uid){
 		
-		logger.info(String.format("receive Request {'uid':%s}", uid));
+		logger.info("receive Request {'uid':'{}'}", uid);
 		try{
 			
 			String base64Captcha = Base64.byteArrayToBase64(captcha.getBytes());
@@ -103,14 +80,18 @@ public class CaptchaController {
 			captchaCommand.setTip(base64Tip);
 			
 			this.captchaProcessor.dispatch(captchaCommand);
-			String message = this.captchaProcessor.waitResp(uid);
+			Command message = this.captchaProcessor.waitCommand(uid);
 			if(null != message)
-				return (String)message;
+				return message;
+			//String message = this.captchaProcessor.waitResp(uid);
+			//if(null != message)
+			//	return (String)message;
 			
 		}catch(Exception ex){
 			ex.printStackTrace();
 		}
-		return "ERROR";
+		
+		return new Other("WAIT TIMEOUT");
 	}
 
 }

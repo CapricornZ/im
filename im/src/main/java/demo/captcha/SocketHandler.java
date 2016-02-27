@@ -30,6 +30,7 @@ import demo.im.rs.entity.Command;
 import demo.im.rs.entity.CommandAdapter;
 import demo.im.rs.entity.Ready;
 import demo.im.rs.entity.Reply;
+import demo.im.rs.entity.Retry;
 
 public class SocketHandler extends TextWebSocketHandler implements IRepository, ApplicationContextAware {
 
@@ -120,21 +121,36 @@ public class SocketHandler extends TextWebSocketHandler implements IRepository, 
 		if("REPLY".equals(ack.getCategory())){//reply
 			
 			final Reply reply = (Reply)ack;
-			logger.info(String.format("receive Response {CAPTCHA:'%s', TO:'%s'}", reply.getCode(), reply.getUid()));
+			logger.info("receive Response {CAPTCHA:'{}', TO:'{}'} by OPERATOR:'{}'", reply.getCode(), reply.getUid(), reply.getOperator());
 			
 			MessageCreator messageCreator = new MessageCreator() {
 				@Override
 				public javax.jms.Message createMessage(Session session) throws JMSException {
 					
 					javax.jms.TextMessage message = session.createTextMessage();
-					message.setText(reply.getCode());
+					message.setText(new com.google.gson.Gson().toJson(reply));
 					message.setStringProperty("from", reply.getUid());
 					return message;
 				}
 			};
-			
 			this.jmsTemplate.send(messageCreator);
+		}
+		if("RETRY".equals(ack.getCategory())){
 			
+			final Retry retry = (Retry)ack;
+			logger.info("receive RETRY by OPERATOR:'{}'", retry.getOperator());
+			
+			MessageCreator messageCreator = new MessageCreator() {
+				@Override
+				public javax.jms.Message createMessage(Session session) throws JMSException {
+					
+					javax.jms.TextMessage message = session.createTextMessage();
+					message.setText(new com.google.gson.Gson().toJson(retry));
+					message.setStringProperty("from", retry.getUid());
+					return message;
+				}
+			};
+			this.jmsTemplate.send(messageCreator);
 		}
 		if("MESSAGE".equals(ack.getCategory())){
 

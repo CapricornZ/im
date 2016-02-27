@@ -8,6 +8,7 @@
 		<script type="text/javascript" src="${ContextPath}/resources/sockjs-0.3.min.js"></script>
 		<script type="text/javascript" src="${ContextPath}/resources/jquery-1.11.2.min.js"></script>
 		<script type="text/javascript" src="${ContextPath}/resources/jquery.timers.js"></script>
+		<script type="text/javascript" src="${ContextPath}/resources/jquery.cookie.js"></script>
 		<script type="text/javascript" src="${ContextPath}/resources/notify.js"></script>
 		<script type="text/javascript" src="${ContextPath}/resources/binary.min.js"></script>
 		<script type="text/javascript" src="${ContextPath}/resources/stomp.js"></script>
@@ -49,9 +50,18 @@
 					return;
 				}
 				
-				userName = window.prompt("在此输入您的大名","BID001");
-				if(userName == ""){ return;	}
-		
+				var operator = $.cookie('operator');
+				if(typeof(operator) == "undefined")
+					userName = "BID001";
+				else
+					userName = operator;
+					
+				userName = window.prompt("在此输入您的大名", userName);
+				if(userName == null || userName == ""){ 
+					return;
+				}
+				
+				$.cookie('operator', userName);
 				ws = (url.indexOf('sockjs') != -1) ? new SockJS(url, undefined, {protocols_whitelist: transports}) : new WebSocket(url);  
 		
 				ws.onopen = function () {
@@ -131,34 +141,29 @@
 				var uid = $('#uid').html();
 		    	var code = $('#inputCaptcha').val();
 		    	if(uid != '' && code != ""){
-		        	/*$.ajax({
-						url  : "response/" + uid,
-						type : 'POST',
-						data : code,
-						contentType: 'application/json; charset=utf-8',
-						success: function(json) { 
-							
-							console.log("success");
-							imReady();
-						},
-			            error: function(msg) {
-			             
-			            	console.log("error");
-			            	imReady(); 
-			            }
-					});*/
 					
 					if (ws != null) {
 					
-						var ack = { "category":"REPLY", "uid":uid, "code":code };
+						var ack = { 
+							"category": "REPLY", 
+							"operator": userName,
+							"uid"     : uid, 
+							"code"    : code };
 						ws.send(JSON.stringify(ack));
 						imReady();
 					
 					} else {
 						alert('connection not established, please connect.');
 					}
-				}else
+				}else{
+					
+					var ack = { 
+						"category": "RETRY", 
+						"operator": userName,
+						"uid"     : uid };
+					ws.send(JSON.stringify(ack));
 					imReady();
+				}
 			}
 			
 			function setDelayMS(){

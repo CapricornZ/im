@@ -2,6 +2,11 @@ package demo.im.rs.entity;
 
 import java.util.Date;
 
+/**
+ * Operator 置Ready状态
+ * @author martin
+ *
+ */
 public class Ready extends Command {
 	
 	private String user;

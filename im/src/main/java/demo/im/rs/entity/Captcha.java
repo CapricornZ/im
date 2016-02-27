@@ -2,6 +2,11 @@ package demo.im.rs.entity;
 
 import java.util.Date;
 
+/**
+ * 请求校验码请求
+ * @author martin
+ *
+ */
 public class Captcha extends Command{
 
 	private String uid;

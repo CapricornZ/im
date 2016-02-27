@@ -26,6 +26,8 @@ public class CommandAdapter implements JsonDeserializer<Command> {
 			return context.deserialize(jsonObject, Captcha.class);
 		else if("REPLY".equals(category))
 			return context.deserialize(jsonObject, Reply.class);
+		else if("RETRY".equals(category))
+			return context.deserialize(jsonObject, Retry.class);
 
 	    throw new RuntimeException("Oops");
 	}
