@@ -28,6 +28,8 @@ public class CommandAdapter implements JsonDeserializer<Command> {
 			return context.deserialize(jsonObject, Reply.class);
 		else if("RETRY".equals(category))
 			return context.deserialize(jsonObject, Retry.class);
+		else if("HEARTBEAT".equals(category))
+			return context.deserialize(jsonObject, HeartBeat.class);
 
 	    throw new RuntimeException("Oops");
 	}

@@ -2,10 +2,6 @@ package demo.im.rs.entity;
 
 import java.util.Date;
 
-import org.codehaus.jackson.map.annotate.JsonDeserialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
-import demo.im.rs.entity.util.*;
 
 public abstract class Command {
 
