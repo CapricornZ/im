@@ -44,7 +44,7 @@ public class CaptchaController {
 	
 	@PostConstruct
 	private void broadcastTimePeriodically() throws Exception {
-		scheduler.scheduleAtFixedRate(new BroadCast(this.sessionRepository), 30000);
+		scheduler.scheduleAtFixedRate(new BroadCast(this.sessionRepository), 5000);
 	}
 	
 	private static final Logger logger = LoggerFactory.getLogger(CaptchaController.class);

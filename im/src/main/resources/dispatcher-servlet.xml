@@ -12,6 +12,7 @@
 	<!--<context:component-scan base-package="com.gerrydevstory.stockticker" />-->
 	<context:component-scan base-package="demo.im.dwr" />
 	<context:component-scan base-package="demo.captcha" />
+	<context:component-scan base-package="demo.command" />
 	
 	<!--
 	<mvc:resources mapping="/resources/**" location="/resources/" />
@@ -19,6 +20,9 @@
 	<bean id="websocket" class="demo.captcha.SocketHandler">
 		<property name="processor" ref="processor"/>
 		<property name="jmsReply" ref="jmsTemplate"/>
+    </bean>
+    
+    <bean id="websocketApp" class="demo.command.SocketHandler">
     </bean>
 
 	<bean class="demo.captcha.firstready.Processor" id="processor">
@@ -105,10 +109,17 @@
     
     <websocket:handlers>  
         <websocket:mapping path="/websocket" handler="websocket"/>  
+        <websocket:handshake-interceptors>
+        	<bean class="com.gerrydevstory.stockticker.HandshakeInterceptor"/>
+        </websocket:handshake-interceptors>  
+    </websocket:handlers>
+    
+    <websocket:handlers>  
+        <websocket:mapping path="/app/websocket" handler="websocketApp"/>  
         <websocket:handshake-interceptors>  
         	<bean class="com.gerrydevstory.stockticker.HandshakeInterceptor"/>
         </websocket:handshake-interceptors>  
-    </websocket:handlers>  
+    </websocket:handlers>
 	 
 	<websocket:message-broker application-destination-prefix="/app">
 		<websocket:stomp-endpoint path="/ws">

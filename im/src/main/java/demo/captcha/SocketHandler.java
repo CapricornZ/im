@@ -1,5 +1,6 @@
 package demo.captcha;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +32,7 @@ import demo.im.rs.entity.CommandAdapter;
 import demo.im.rs.entity.Ready;
 import demo.im.rs.entity.Reply;
 import demo.im.rs.entity.Retry;
+import demo.im.rs.entity.util.TimestampTypeAdapter;
 
 public class SocketHandler extends TextWebSocketHandler implements IRepository, ApplicationContextAware {
 
@@ -103,9 +105,11 @@ public class SocketHandler extends TextWebSocketHandler implements IRepository, 
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
 
 		logger.info("handle Message({})", session.getAttributes().get(Consumer.USER) == null ? "DEFAULT USER" : session.getAttributes().get(Consumer.USER));
-		super.handleTextMessage(session, message);
-
-		Gson gson = new GsonBuilder().registerTypeAdapter(Command.class, new CommandAdapter()).create();
+		super.handleTextMessage(session, message); 
+		
+		Gson gson = new GsonBuilder().registerTypeAdapter(Command.class, new CommandAdapter())
+				.registerTypeAdapter(Timestamp.class,new TimestampTypeAdapter()).setDateFormat("yyyy-MM-dd HH:mm:ss")
+				.create();
 	    Command ack = gson.fromJson(message.getPayload(), Command.class);
 	    
 	    logger.info("       Message({})", ack.getCategory());
