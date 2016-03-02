@@ -35,7 +35,7 @@ public class SocketHandler extends TextWebSocketHandler{
 			rtn.add((String)client.getUser());
 		return rtn;
 	}
-	
+
 	@Override
 	protected void handlePongMessage(WebSocketSession session, PongMessage message) throws Exception {
 
@@ -73,7 +73,7 @@ public class SocketHandler extends TextWebSocketHandler{
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
 		
-		logger.debug(">>>>>connection established......<<<<<");
+		logger.debug(">>>>>connection established<<<<<");
 		String user = this.getUser(session);
 
 		this.clients.add(new Client(session, user));
@@ -83,7 +83,7 @@ public class SocketHandler extends TextWebSocketHandler{
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
 
-		logger.debug(">>>>>connection lost......<<<<<");
+		logger.debug(">>>>>connection lost<<<<<");
 		String user = this.getUser(session);
 		
 		for(int i=this.clients.size()-1; i>=0; i--){
@@ -125,9 +125,13 @@ public class SocketHandler extends TextWebSocketHandler{
 		}
 	}
 	
+	private Gson gson = new GsonBuilder().
+			registerTypeAdapter(Timestamp.class,new TimestampTypeAdapter()).setDateFormat("yyyy-MM-dd HH:mm:ss").
+			create();
+	
 	private void send(WebSocketSession session, Command command) throws IOException{
 		
-		String value = new com.google.gson.Gson().toJson(command);
+		String value = gson.toJson(command);
 		TextMessage msg = new TextMessage(value);
 		session.sendMessage(msg);
 	}
