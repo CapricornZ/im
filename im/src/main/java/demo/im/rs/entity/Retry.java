@@ -17,8 +17,8 @@ public class Retry extends Command {
 	private String operator;
 	private String uid;
 	
-	public String getOperator() { return operator; }
-	public void setOperator(String user) { this.operator = user; }
+	public String getFrom() { return operator; }
+	public void setFrom(String user) { this.operator = user; }
 	
 	public String getUid() { return uid; }
 	public void setUid(String uid) { this.uid = uid; }

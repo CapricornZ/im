@@ -31,8 +31,37 @@
 					$(this).prop("checked", false);
 				});
 			}
+			
+			function setParams(){
+			
+				var clients = new Array();
+				$("input[type='checkbox']:checked").each(function(){
+					clients.push($(this).val());
+				});
+				
+				var data = {
+					'clients': clients,
+					'param'  : [
+						'triggerF11=11:20:00,11:28:40',
+						'triggerSetPolicy=11:25:00',
+						'triggerLoadResource=11:18:00'
+					]
+				}
+				
+				$.ajax({
+					url  : "batch/setParam",
+					type : 'PUT',
+					data : JSON.stringify(data),
+					contentType: 'application/json; charset=utf-8',
+					success: function(json) { 
+						console.log("success");
+					},
+		            error: function(msg) {
+		            }
+				});
+			}
 		
-			function reload(){
+			function triggerReload(){
 			
 				var clients = new Array();
 				$("input[type='checkbox']:checked").each(function(){
@@ -40,7 +69,27 @@
 				});
 				
 				$.ajax({
-					url  : "batch/reload",
+					url  : "batch/trigger/reload",
+					type : 'PUT',
+					data : JSON.stringify(clients),
+					contentType: 'application/json; charset=utf-8',
+					success: function(json) { 
+						console.log("success");
+					},
+		            error: function(msg) {
+		            }
+				});
+			}
+			
+			function triggerF11(){
+			
+				var clients = new Array();
+				$("input[type='checkbox']:checked").each(function(){
+					clients.push($(this).val());
+				});
+				
+				$.ajax({
+					url  : "batch/trigger/F11",
 					type : 'PUT',
 					data : JSON.stringify(clients),
 					contentType: 'application/json; charset=utf-8',
@@ -93,9 +142,18 @@
 					</tr>
 					#end
 					</tbody>
+					<thead>
+			  			<td>
+			  				<input type="radio" name="sel" value="select" onclick="return checkAll();"/>全选
+			  				<input type="radio" name="sel" value="deselect" onclick="return uncheckAll();"/>清除
+			  			</td>
+			  		</thead>
 				</table>
 					<button style="btn btn-xs" onclick="return message('HELLO');">广播</button>
-					<button style="btn btn-xs" onclick="return reload();">RELOAD</button>
+					<button style="btn btn-xs" onclick="return setParams();">定时器</button>
+					
+					<button style="btn btn-xs" onclick="return triggerReload();">重新加载配置</button>
+					<button style="btn btn-xs" onclick="return triggerF11();">触发F11</button>
 			  </div>
 			  <div class="panel-footer" style="text-align:center;"><label id="TIMER">00:00:00.000</label></div>
 			</div>

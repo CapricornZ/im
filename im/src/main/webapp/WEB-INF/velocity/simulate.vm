@@ -100,13 +100,13 @@
 
 									var val = elemTR.attr('val');
 									if(val == json.code){
-										elemResult.html("<img src='${ContextPath}/resources/img/OK.jpg' height='20'/>" + json.code + " by [{0}]".format(json.operator));
+										elemResult.html("<img src='${ContextPath}/resources/img/OK.jpg' height='20'/>" + json.code + " by [{0}]".format(json.from));
 									} else {
-										elemResult.html("<img src='${ContextPath}/resources/img/Error.jpg' height='20'/>" + json.code + " by [{0}]".format(json.operator));
+										elemResult.html("<img src='${ContextPath}/resources/img/Error.jpg' height='20'/>" + json.code + " by [{0}]".format(json.from));
 									}
 								}
 								else if( "RETRY" == json.category ){
-									elemResult.html("<img src='${ContextPath}/resources/img/Error.jpg' height='20'/>RETRY" + " by [{0}]".format(json.operator));
+									elemResult.html("<img src='${ContextPath}/resources/img/Error.jpg' height='20'/>RETRY" + " by [{0}]".format(json.from));
 								}
 								else if( "OTHER" == json.category ){
 									elemResult.html("<img src='${ContextPath}/resources/img/Error.jpg' height='20'/>" + json.description);

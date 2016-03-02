@@ -18,8 +18,8 @@ public class Reply extends Command {
 	private String uid;
 	private String operator;
 
-	public String getOperator() { return operator; }
-	public void setOperator(String user) { this.operator = user; }
+	public String getFrom() { return operator; }
+	public void setFrom(String user) { this.operator = user; }
 	
 	public String getCode() { return code; }
 	public void setCode(String code) { this.code = code; }

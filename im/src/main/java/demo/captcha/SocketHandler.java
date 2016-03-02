@@ -125,7 +125,7 @@ public class SocketHandler extends TextWebSocketHandler implements IRepository, 
 		if("REPLY".equals(ack.getCategory())){//reply
 			
 			final Reply reply = (Reply)ack;
-			logger.info("receive Response {CAPTCHA:'{}', TO:'{}'} by OPERATOR:'{}'", reply.getCode(), reply.getUid(), reply.getOperator());
+			logger.info("receive Response {CAPTCHA:'{}', TO:'{}'} by OPERATOR:'{}'", reply.getCode(), reply.getUid(), reply.getFrom());
 			
 			MessageCreator messageCreator = new MessageCreator() {
 				@Override
@@ -142,7 +142,7 @@ public class SocketHandler extends TextWebSocketHandler implements IRepository, 
 		if("RETRY".equals(ack.getCategory())){
 			
 			final Retry retry = (Retry)ack;
-			logger.info("receive RETRY by OPERATOR:'{}'", retry.getOperator());
+			logger.info("receive RETRY by OPERATOR:'{}'", retry.getFrom());
 			
 			MessageCreator messageCreator = new MessageCreator() {
 				@Override
