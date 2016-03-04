@@ -97,7 +97,7 @@ public class SocketHandler extends TextWebSocketHandler{
 	@Override  
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
 
-		String user = (String)(session.getAttributes().get("USER") == null ? "DEFAULT USER" : session.getAttributes().get("USER"));
+		String user = this.getUser(session);
 		logger.info("handle Message({})", user);
 		super.handleTextMessage(session, message); 
 		

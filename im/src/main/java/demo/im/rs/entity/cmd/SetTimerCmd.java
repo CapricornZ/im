@@ -1,11 +1,13 @@
-package demo.im.rs.entity;
+package demo.im.rs.entity.cmd;
 
 import java.util.Date;
 import java.util.List;
 
-public class SetTimer extends Command {
+import demo.im.rs.entity.Command;
 
-	public SetTimer(){
+public class SetTimerCmd extends Command {
+
+	public SetTimerCmd(){
 		this.setCategory("SETTIMER");
 		this.setTime(new Date());
 	}

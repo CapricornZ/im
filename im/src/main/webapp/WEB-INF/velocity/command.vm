@@ -4,6 +4,14 @@
 		<title>校验码Demo - WebSocket/SockJS</title>
 		<link type="text/css" href="${ContextPath}/resources/css/bootstrap.min.css" rel="stylesheet"/>
 		<link type="text/css" href="${ContextPath}/resources/css/bootstrap-switch.min.css" rel="stylesheet"/>
+		<style>
+			.fixed{
+				position:fixed;
+				bottom:0;
+				width:50px; height:50px; left:0%; top:50%; 
+				background:#eee
+			} 
+		</style>
 		
 		<script type="text/javascript" src="${ContextPath}/resources/sockjs-0.3.min.js"></script>
 		<script type="text/javascript" src="${ContextPath}/resources/jquery-1.11.2.min.js"></script>
@@ -14,6 +22,7 @@
 		<script type="text/javascript" src="${ContextPath}/resources/stomp.js"></script>
 		
 		<script type="text/javascript" src="${ContextPath}/resources/bootstrap.js"></script>
+		<script type="text/javascript" src="${ContextPath}/resources/bootstrap-dialog.min.js"></script>
 		<script type="text/javascript" src="${ContextPath}/resources/bootstrap-switch.js"></script>
 		
 		<script type="text/javascript" src="${ContextPath}/resources/date.js"></script>
@@ -32,6 +41,26 @@
 				});
 			}
 			
+			function updatePolicy(){
+				
+				var clients = new Array();
+				$("input[type='checkbox']:checked").each(function(){
+					clients.push($(this).val());
+				});
+				
+				$.ajax({
+					url  : "batch/updatePolicy",
+					type : 'PUT',
+					data : JSON.stringify(clients),
+					contentType: 'application/json; charset=utf-8',
+					success: function(json) { 
+						console.log("success");
+					},
+		            error: function(msg) {
+		            }
+				});
+			}
+			
 			function setParams(){
 			
 				var clients = new Array();
@@ -42,9 +71,9 @@
 				var data = {
 					'clients': clients,
 					'param'  : [
-						'triggerF11=11:20:00,11:28:40',
-						'triggerSetPolicy=11:25:00',
-						'triggerLoadResource=11:18:00'
+						'triggerF11?' + $('#txtF11').val(),
+						'triggerSetPolicy?' + $('#txtUpdatePolicy').val(),
+						'triggerLoadResource?' + $('#txtReload').val()
 					]
 				}
 				
@@ -101,7 +130,7 @@
 				});
 			}
 			
-			function message(message){
+			function broadmessage(){
 				
 				var clients = new Array();
 				$("input[type='checkbox']:checked").each(function(){
@@ -109,7 +138,7 @@
 				});
 				
 				$.ajax({
-					url  : "batch/message/" + message,
+					url  : "batch/message/" + $('#txtMessage').val(),
 					type : 'PUT',
 					data : JSON.stringify(clients),
 					contentType: 'application/json; charset=utf-8',
@@ -120,10 +149,29 @@
 		            }
 				});
 			}
+			
+			function openDlg(){
+
+				message.show();
+				BootstrapDialog.show({
+					title : 'COMMAND',
+					message:message
+				});
+			}
+			
+			var message;
+			$(function(){
+				message = $('#buttons');
+				message.hide();
+			});
 		</script>
 	</head>
 	<body>
-		<div class="panel panel-default">
+		<div class="fixed" onclick="return openDlg();">
+			<img width='50' src='${ContextPath}/resources/img/right.png'/>
+		</div>
+		
+		<div class="panel panel-default" style='margin-left: 50px;margin-right: 50px;'>
 			  <div class="panel-heading">
 			  	<div class="row"><h5 class="panel-title">在线客户端</h5></div>
 			  </div>
@@ -149,11 +197,48 @@
 			  			</td>
 			  		</thead>
 				</table>
-					<button style="btn btn-xs" onclick="return message('HELLO');">广播</button>
-					<button style="btn btn-xs" onclick="return setParams();">定时器</button>
-					
-					<button style="btn btn-xs" onclick="return triggerReload();">重新加载配置</button>
-					<button style="btn btn-xs" onclick="return triggerF11();">触发F11</button>
+				
+				<div class="form-horizontal" id="buttons">
+					<fieldset>
+						<legend>广播</legend>
+						<div class="form-group">
+							<label class="col-sm-2 control-label">消息</label>
+							<div class="col-sm-4"><input class="form-control" id="txtMessage" placeholder="消息"/></div>
+							<div class="col-sm-4">
+								<button class="btn btn-primary" onclick="broadmessage();"><span class="glyphicon glyphicon-download-alt"></span>广播</button>
+							</div>
+						</div>
+					</fieldset>
+					<fieldset>
+						<legend>设置定时器</legend>
+						<div class="form-group">
+							<label class="col-sm-2 control-label">F11</label>
+							<div class="col-sm-6"><input class="form-control" id="txtF11" placeholder="11:20:00,11:28:40"/></div>
+							<div class="col-sm-1">
+								<button class="btn btn-sm btn-danger" onclick="return triggerF11();"><span class="glyphicon glyphicon-play"></span></button>
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-sm-2 control-label">更新策略</label>
+							<div class="col-sm-6"><input class="form-control" id="txtUpdatePolicy" placeholder="11:25:00"/></div>
+							<div class="col-sm-1">
+								<button class="btn btn-sm btn-danger" onclick="return updatePolicy();"><span class="glyphicon glyphicon-play"></span></button>
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-sm-2 control-label">加载配置</label>
+							<div class="col-sm-6"><input class="form-control" id="txtReload" placeholder="11:18:00"/></div>
+							<div class="col-sm-1">
+								<button class="btn btn-sm btn-danger" onclick="return triggerReload();"><span class="glyphicon glyphicon-play"></span></button>
+							</div>
+							<div class="col-sm-2">
+								<button class="btn btn-primary" onclick="return setParams();">
+									<span class="glyphicon glyphicon-download-alt"></span>设置定时
+								</button>
+							</div>
+						</div>
+					</fieldset>
+				</div>
 			  </div>
 			  <div class="panel-footer" style="text-align:center;"><label id="TIMER">00:00:00.000</label></div>
 			</div>

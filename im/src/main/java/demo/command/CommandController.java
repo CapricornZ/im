@@ -15,9 +15,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import demo.im.rs.entity.Message;
-import demo.im.rs.entity.Reload;
-import demo.im.rs.entity.SetTimer;
-import demo.im.rs.entity.TriggerF11Cmd;
+import demo.im.rs.entity.cmd.ReloadCmd;
+import demo.im.rs.entity.cmd.SetTimerCmd;
+import demo.im.rs.entity.cmd.TriggerF11Cmd;
+import demo.im.rs.entity.cmd.UpdatePolicyCmd;
 
 @RequestMapping(value = "/command")
 @Controller
@@ -50,7 +51,7 @@ public class CommandController {
 	@ResponseBody
 	public String reload(@PathVariable("CLIENT")String client) throws IOException{
 		
-		this.repo.send(client, new Reload());
+		this.repo.send(client, new ReloadCmd());
 		return "SUCCESS";
 	}
 	
@@ -68,7 +69,7 @@ public class CommandController {
 	public String reload(@RequestBody List<String> clients) throws IOException{
 		
 		logger.info("receive /batch/trigger/reload");
-		this.repo.send(clients, new Reload());
+		this.repo.send(clients, new ReloadCmd());
 		return "SUCCESS";
 	}
 	
@@ -98,9 +99,18 @@ public class CommandController {
 	public String setParam(@RequestBody SetParamToClient param) throws IOException{
 		
 		logger.info("receive /batch/setParam");
-		SetTimer command = new SetTimer();
+		SetTimerCmd command = new SetTimerCmd();
 		command.setParam(param.getParam());
 		this.repo.send(param.getClients(), command);
+		return "SUCCESS";
+	}
+	
+	@RequestMapping(value = "/batch/updatePolicy", method=RequestMethod.PUT, consumes="application/json; charset=utf-8")
+	@ResponseBody
+	public String updatePolicy(@RequestBody List<String> clients) throws IOException{
+		
+		logger.info("receive /batch/updatePolicy");
+		this.repo.send(clients, new UpdatePolicyCmd());
 		return "SUCCESS";
 	}
 }
