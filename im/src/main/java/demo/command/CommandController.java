@@ -17,8 +17,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import demo.im.rs.entity.Message;
 import demo.im.rs.entity.cmd.ReloadCmd;
 import demo.im.rs.entity.cmd.SetTimerCmd;
+import demo.im.rs.entity.cmd.SetTriggerCmd;
 import demo.im.rs.entity.cmd.TriggerF11Cmd;
 import demo.im.rs.entity.cmd.UpdatePolicyCmd;
+import demo.im.rs.entity.policy.Trigger;
 
 @RequestMapping(value = "/command")
 @Controller
@@ -111,6 +113,28 @@ public class CommandController {
 		
 		logger.info("receive /batch/updatePolicy");
 		this.repo.send(clients, new UpdatePolicyCmd());
+		return "SUCCESS";
+	}
+	
+	public static class TriggerV1{
+		
+		private List<String> clients;
+		private Trigger trigger;
+		
+		public List<String> getClients() { return clients; }
+		public void setClients(List<String> clients) { this.clients = clients; }
+		
+		public Trigger getTrigger() { return trigger; }
+		public void setTrigger(Trigger trigger) { this.trigger = trigger; }
+	}
+	
+	@RequestMapping(value = "/batch/trigger/V1", method=RequestMethod.PUT, consumes="application/json; charset=utf-8")
+	@ResponseBody
+	public String triggerV1(@RequestBody TriggerV1 request) throws IOException{
+		
+		logger.info("receive /batch/trigger/V1");
+		String trigger = new com.google.gson.Gson().toJson(request.getTrigger());
+		this.repo.send(request.getClients(), new SetTriggerCmd(trigger));
 		return "SUCCESS";
 	}
 }

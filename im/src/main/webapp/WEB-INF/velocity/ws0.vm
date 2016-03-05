@@ -36,10 +36,13 @@
 		        document.getElementById('disconnect').disabled = !connected;
 		        document.getElementById('echo').disabled = !connected;
 		        $('#message').attr('disabled', !connected);
-		        if(!connected)
+		        if(!connected){
+		        	$("#status").css("color","red");
 		        	$("#status").html("<img src='${ContextPath}/resources/img/offline.ico'></img>离线！");
-		        else
+		        }else{
+		        	$("#status").css("color","green");
 		        	$("#status").html("<img src='${ContextPath}/resources/img/online.ico'></img>在线！");
+		        }
 		    }
 		    
 		    function connect() {
@@ -299,15 +302,20 @@
 					<input id="radio1" name="group1" onclick="updateUrl('/im/web/websocket');" type="radio">W3C WebSocket<br/>
 					<input id="radio2" checked="" name="group1" onclick="updateUrl('/im/web/websocket');" type="radio">SockJS<br/>
 
-					<button id="connect" onclick="connect();" class="btn btn-primary" style="margin-top: 10px;">Connect</button>
-					<button id="disconnect" disabled="" onclick="disconnect();" class="btn btn-primary" style="margin-top: 10px;">Disconnect</button><br/>
-					<span id="status"><img src="${ContextPath}/resources/img/offline.ico"></img>离线！</span>
+					<button id="connect" onclick="connect();" class="btn btn-primary" style="margin-top: 10px;">
+						Connect
+					</button>
+					<button id="disconnect" disabled="" onclick="disconnect();" class="btn btn-danger" style="margin-top: 10px;">
+						<span class="glyphicon glyphicon-info-sign"></span>Disconnect
+					</button><br/>
+					<span id="status" style="color:red;"><img src="${ContextPath}/resources/img/offline.ico"></img>离线！</span>
 				</div>
 				<div style="margin-top: 10px;">
 					<textarea id="message" style="height: 100px;" disabled="">输入消息...</textarea>
 				</div>
 				<div style="margin-top: 10px;text-align:right;">
-					<button id="echo" onclick="broadcast();" disabled="" class="btn btn-primary btn-sm">消息广播</button>
+					<button id="echo" onclick="broadcast();" disabled="" class="btn btn-primary btn-sm">
+						<span class="glyphicon glyphicon-envelope"></span>消息广播</button>
 				</div>
 				<div style="margin-top: 10px;">
 					验证码延迟时间(<span id="spanDelay">500</span>ms):<br/>
@@ -389,7 +397,9 @@
 				</p>
 				<input type="text" id="inputCaptcha" style="margin-bottom:10px;height:32px;"/>
 				<br/>
-				<button class="btn btn-sm btn-primary" onclick="return submitCaptcha();">空格失效？快点这里！</button>
+				<button class="btn btn-sm btn-primary" onclick="return submitCaptcha();">
+				空格失效？快点这里！
+				</button>
 				<br/>
 				GUID:<label id="uid"></label>
 			</div>

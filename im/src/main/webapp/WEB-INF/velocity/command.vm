@@ -28,6 +28,9 @@
 		<script type="text/javascript" src="${ContextPath}/resources/date.js"></script>
 		
 		<script type="text/javascript">
+			String.prototype.Trim = function(){ return this.replace(/(^\s*)|(\s*$)/g, ""); }   
+			String.prototype.LTrim = function(){ return this.replace(/(^\s*)/g, ""); }   
+			String.prototype.RTrim = function() { return this.replace(/(\s*$)/g, ""); }  
 		
 			function checkAll(){
 				$('input[type=checkbox]').each(function(){
@@ -38,6 +41,38 @@
 			function uncheckAll(){
 				$('input[type=checkbox]').each(function(){
 					$(this).prop("checked", false);
+				});
+			}
+			
+			function triggerV1(){
+			
+				var clients = new Array();
+				$("input[type='checkbox']:checked").each(function(){
+					clients.push($(this).val());
+				});
+				
+				var trigger = {
+					'category'  : 'V1',
+					'deltaPrice': $('#deltaPrice').val(),
+					'priceTime' : $('#timePrice').val(),
+					'submitTime': $('#timeSubmit').val()
+				};
+				
+				var data = {
+					'clients': clients,
+					'trigger': trigger
+				};
+				
+				$.ajax({
+					url  : "batch/trigger/V1",
+					type : 'PUT',
+					data : JSON.stringify(data),
+					contentType: 'application/json; charset=utf-8',
+					success: function(json) { 
+						console.log("success");
+					},
+		            error: function(msg) {
+		            }
 				});
 			}
 			
@@ -67,15 +102,25 @@
 				$("input[type='checkbox']:checked").each(function(){
 					clients.push($(this).val());
 				});
-				
+
 				var data = {
 					'clients': clients,
-					'param'  : [
-						'triggerF11?' + $('#txtF11').val(),
-						'triggerSetPolicy?' + $('#txtUpdatePolicy').val(),
-						'triggerLoadResource?' + $('#txtReload').val()
-					]
+					'param'  : []
+				};
+				
+				if($('#txtF11').val().Trim() == '' && $('#txtUpdatePolicy').val().Trim() == '' && $('#txtReload').val().Trim() == ''){
+					alert("至少需要设置一个配置");return;
 				}
+				
+				console.log($('#txtF11').val().Trim());
+				console.log($('#txtUpdatePolicy').val().Trim());
+				console.log($('#txtReload').val().Trim());
+				if($('#txtF11').val().Trim() != '')
+					data.param.push("triggerF11?" + $('#txtF11').val());
+				if($('#txtUpdatePolicy').val().Trim() != '')
+					data.param.push('triggerSetPolicy?' + $('#txtUpdatePolicy').val());
+				if($('#txtReload').val().Trim() != '')
+					data.param.push('triggerLoadResource?' + $('#txtReload').val());
 				
 				$.ajax({
 					url  : "batch/setParam",
@@ -136,15 +181,16 @@
 				$("input[type='checkbox']:checked").each(function(){
 					clients.push($(this).val());
 				});
+				if($('#txtMessage').val().Trim() == ''){
+					alert('输入[广播消息]先');return;
+				}
 				
 				$.ajax({
 					url  : "batch/message/" + $('#txtMessage').val(),
 					type : 'PUT',
 					data : JSON.stringify(clients),
 					contentType: 'application/json; charset=utf-8',
-					success: function(json) { 
-						console.log("success");
-					},
+					success: function(json) { console.log("success"); },
 		            error: function(msg) {
 		            }
 				});
@@ -154,7 +200,7 @@
 
 				message.show();
 				BootstrapDialog.show({
-					title : 'COMMAND',
+					title : '<center>COMMAND</center>',
 					message:message
 				});
 			}
@@ -164,6 +210,18 @@
 				message = $('#buttons');
 				message.hide();
 			});
+			
+			function toggleForm(){
+				
+				if($("span[data-toggle=TRIGGER-V1]").hasClass('glyphicon-plus-sign')){
+					$('span[data-toggle=TRIGGER-V1]').attr("class", 'glyphicon glyphicon-minus-sign');
+					$('div[data-toggle=TRIGGER-V1]').show();
+				} else {
+					$('span[data-toggle=TRIGGER-V1]').attr("class", 'glyphicon glyphicon-plus-sign');
+					$('div[data-toggle=TRIGGER-V1]').hide();
+				}
+				
+			}
 		</script>
 	</head>
 	<body>
@@ -200,12 +258,12 @@
 				
 				<div class="form-horizontal" id="buttons">
 					<fieldset>
-						<legend>广播</legend>
+						<legend>广播消息</legend>
 						<div class="form-group">
-							<label class="col-sm-2 control-label">消息</label>
-							<div class="col-sm-4"><input class="form-control" id="txtMessage" placeholder="消息"/></div>
-							<div class="col-sm-4">
-								<button class="btn btn-primary" onclick="broadmessage();"><span class="glyphicon glyphicon-download-alt"></span>广播</button>
+							<label class="col-sm-2 control-label"></label>
+							<div class="col-sm-6"><input class="form-control" id="txtMessage" placeholder="消息"/></div>
+							<div class="col-sm-2">
+								<button class="btn btn-primary" onclick="broadmessage();"><span class="glyphicon glyphicon-envelope"></span>广播消息</button>
 							</div>
 						</div>
 					</fieldset>
@@ -236,6 +294,24 @@
 									<span class="glyphicon glyphicon-download-alt"></span>设置定时
 								</button>
 							</div>
+						</div>
+					</fieldset>
+					<fieldset>
+						<legend>
+							<span data-toggle="TRIGGER-V1" class="glyphicon glyphicon-minus-sign" style="cursor:pointer;" onclick="return toggleForm();"></span>DEBUG:策略V1
+						</legend>
+						<div class="form-group" data-toggle="TRIGGER-V1">
+							<label class="col-sm-2 control-label">价格</label>
+							<div class="col-sm-4"><input class="form-control" id="deltaPrice" placeholder="600"/></div>
+							<label class="col-sm-2 control-label">出价时间</label>
+							<div class="col-sm-4"><input class="form-control" id="timePrice" placeholder="11:29:42"/></div>
+						</div>
+						<div class="form-group" data-toggle="TRIGGER-V1">
+							<label class="col-sm-2 control-label">提交时间</label>
+							<div class="col-sm-4"><input class="form-control" id="timeSubmit" placeholder="11:29:48"/></div>
+							<div class="col-sm-6" style="text-align:center">
+								<button class="btn btn-primary" onclick="return triggerV1();"><span class="glyphicon glyphicon-download-alt"></span>更新策略</button>
+							</div>							
 						</div>
 					</fieldset>
 				</div>

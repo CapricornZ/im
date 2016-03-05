@@ -11,7 +11,7 @@
 	<mvc:annotation-driven />
 	<!--<context:component-scan base-package="com.gerrydevstory.stockticker" />-->
 	<!-- <context:component-scan base-package="demo.im.dwr" /> -->
-	<!-- <context:component-scan base-package="demo.captcha" /> -->
+	<context:component-scan base-package="demo.captcha" />
 	<context:component-scan base-package="demo.command" />
 	
 	<!--
