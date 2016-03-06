@@ -34,7 +34,7 @@ public class CommandController {
 	@RequestMapping(value = "/", method = RequestMethod.GET)
 	public String home(Model model) {
 		
-		List<String> users = repo.getActiveUsers();
+		List<Client> users = repo.getActiveUsers();
 		model.addAttribute("CLIENTS", users);
 		return "command";
 	}

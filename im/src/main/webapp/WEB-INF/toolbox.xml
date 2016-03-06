@@ -10,6 +10,11 @@
         <scope>application</scope>  
         <class>org.apache.velocity.tools.generic.NumberTool</class>  
     </tool>
+    <tool>
+    	<key>DateTool</key>
+    	<scope>application</scope>
+    	<class>org.apache.velocity.tools.generic.DateTool</class>
+    </tool>
 
 	<!-- <tool>
 		<key>orderHelper</key>

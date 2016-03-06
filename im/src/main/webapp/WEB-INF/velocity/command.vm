@@ -17,6 +17,8 @@
 		<script type="text/javascript" src="${ContextPath}/resources/jquery-1.11.2.min.js"></script>
 		<script type="text/javascript" src="${ContextPath}/resources/jquery.timers.js"></script>
 		<script type="text/javascript" src="${ContextPath}/resources/jquery.cookie.js"></script>
+		<script type="text/javascript" src="${ContextPath}/resources/jquery.maskedinput.js"></script>
+		
 		<script type="text/javascript" src="${ContextPath}/resources/notify.js"></script>
 		<script type="text/javascript" src="${ContextPath}/resources/binary.min.js"></script>
 		<script type="text/javascript" src="${ContextPath}/resources/stomp.js"></script>
@@ -30,7 +32,9 @@
 		<script type="text/javascript">
 			String.prototype.Trim = function(){ return this.replace(/(^\s*)|(\s*$)/g, ""); }   
 			String.prototype.LTrim = function(){ return this.replace(/(^\s*)/g, ""); }   
-			String.prototype.RTrim = function() { return this.replace(/(\s*$)/g, ""); }  
+			String.prototype.RTrim = function() { return this.replace(/(\s*$)/g, ""); }
+			
+			$.mask.definitions['z']='[0-9\-]';
 		
 			function checkAll(){
 				$('input[type=checkbox]').each(function(){
@@ -50,6 +54,16 @@
 				$("input[type='checkbox']:checked").each(function(){
 					clients.push($(this).val());
 				});
+				
+				if($('#deltaPrice').val().Trim() == ''){
+					alert('设置[价格]先');return;
+				}
+				if($('#timePrice').val() == ''){
+					alert('设置[出价时间]先');return;
+				}
+				if($('#timeSubmit').val() == ''){
+					alert('设置[提交时间]先');return;
+				}
 				
 				var trigger = {
 					'category'  : 'V1',
@@ -209,6 +223,22 @@
 			$(function(){
 				message = $('#buttons');
 				message.hide();
+				
+				$("#deltaPrice").mask("9999", {placeholder:"0800"});
+				$("input[data-toggle=TIME]").mask("99:99:zz", {placeholder:"hh:MM:ss"});
+				
+				$('input[data-toggle=clientFilter]').blur(function(){
+					
+					var filter = $(this).val();
+					$('tbody tr').show();
+					$('tbody tr').each(function(){
+					
+						var trClient = $(this).attr('client');
+						if(trClient.indexOf(filter) < 0){
+							$(this).hide();
+						}
+					});
+				});
 			});
 			
 			function toggleForm(){
@@ -231,7 +261,7 @@
 		
 		<div class="panel panel-default" style='margin-left: 50px;margin-right: 50px;'>
 			  <div class="panel-heading">
-			  	<div class="row"><h5 class="panel-title">在线客户端</h5></div>
+			  	<div class="row">在线客户端 : <input type="text" data-toggle="clientFilter"/></div>
 			  </div>
 			  <div class="panel-body">
 			  	<table class="table table-striped">
@@ -240,11 +270,20 @@
 			  				<input type="radio" name="sel" value="select" onclick="return checkAll();"/>全选
 			  				<input type="radio" name="sel" value="deselect" onclick="return uncheckAll();"/>清除
 			  			</td>
+			  			<td>HeartBeat</td>
 			  		</thead>
 					<tbody>
 					#foreach(${client} in ${CLIENTS})
-					<tr>
-						<td><input type="checkbox" value="${client}">${client}</td>
+					<tr client="${client.user}">
+						<td>
+							<input type="checkbox" value="${client.user}">${client.user}
+							#if(${client.isOnline})
+								<img src="${ContextPath}/resources/img/online.ico"/>
+							#else
+								<img src="${ContextPath}/resources/img/offline.ico"/>
+							#end
+						</td>
+						<td>$!{client.lastMessage} @ $DateTool.format('HH:mm:ss', $!{client.lastPing})</td>
 					</tr>
 					#end
 					</tbody>
@@ -253,6 +292,7 @@
 			  				<input type="radio" name="sel" value="select" onclick="return checkAll();"/>全选
 			  				<input type="radio" name="sel" value="deselect" onclick="return uncheckAll();"/>清除
 			  			</td>
+			  			<td></td>
 			  		</thead>
 				</table>
 				
@@ -304,11 +344,11 @@
 							<label class="col-sm-2 control-label">价格</label>
 							<div class="col-sm-4"><input class="form-control" id="deltaPrice" placeholder="600"/></div>
 							<label class="col-sm-2 control-label">出价时间</label>
-							<div class="col-sm-4"><input class="form-control" id="timePrice" placeholder="11:29:42"/></div>
+							<div class="col-sm-4"><input class="form-control" id="timePrice" placeholder="11:29:42" data-toggle="TIME"/></div>
 						</div>
 						<div class="form-group" data-toggle="TRIGGER-V1">
 							<label class="col-sm-2 control-label">提交时间</label>
-							<div class="col-sm-4"><input class="form-control" id="timeSubmit" placeholder="11:29:48"/></div>
+							<div class="col-sm-4"><input class="form-control" id="timeSubmit" placeholder="11:29:48" data-toggle="TIME"/></div>
 							<div class="col-sm-6" style="text-align:center">
 								<button class="btn btn-primary" onclick="return triggerV1();"><span class="glyphicon glyphicon-download-alt"></span>更新策略</button>
 							</div>							

@@ -1,8 +1,8 @@
 package demo.command;
 
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -28,12 +28,10 @@ public class SocketHandler extends TextWebSocketHandler{
 	private static final Logger logger = LoggerFactory.getLogger(SocketHandler.class);
 	
 	private List<Client> clients = new ArrayList<Client>();
-	public List<String> getActiveUsers(){
+	
+	public List<Client> getActiveUsers(){
 		
-		List<String> rtn = new ArrayList<String>();
-		for(Client client : this.clients)
-			rtn.add((String)client.getUser());
-		return rtn;
+		return this.clients;
 	}
 
 	@Override
@@ -84,8 +82,6 @@ public class SocketHandler extends TextWebSocketHandler{
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
 
 		logger.debug(">>>>>connection lost<<<<<");
-		String user = this.getUser(session);
-		
 		for(int i=this.clients.size()-1; i>=0; i--){
 			
 			if(session == this.clients.get(i).getSession())
@@ -102,7 +98,7 @@ public class SocketHandler extends TextWebSocketHandler{
 		super.handleTextMessage(session, message); 
 		
 		Gson gson = new GsonBuilder().registerTypeAdapter(Command.class, new CommandAdapter())
-				.registerTypeAdapter(Timestamp.class,new TimestampTypeAdapter()).setDateFormat("yyyy-MM-dd HH:mm:ss")
+				.registerTypeAdapter(Date.class, new TimestampTypeAdapter()).setDateFormat("yyyy-MM-dd HH:mm:ss")
 				.create();
 	    Command ack = gson.fromJson(message.getPayload(), Command.class);
 	    
@@ -121,26 +117,40 @@ public class SocketHandler extends TextWebSocketHandler{
 		}else if("HEARTBEAT".equals(ack.getCategory())){
 			
 			logger.info("       receive HEART BEAT from \"{}\"", user);
-			this.send(session, new HeartBeat());
+			Client client = this.findSession(session);
+			if(client != null){
+
+				client.process((HeartBeat)ack);
+				client.send(new HeartBeat());
+			}
 		}
 	}
 	
-	private Gson gson = new GsonBuilder().
-			registerTypeAdapter(Timestamp.class,new TimestampTypeAdapter()).setDateFormat("yyyy-MM-dd HH:mm:ss").
-			create();
-	
-	private void send(WebSocketSession session, Command command) throws IOException{
+	private Client findSession(String user){
 		
-		String value = gson.toJson(command);
-		TextMessage msg = new TextMessage(value);
-		session.sendMessage(msg);
+		Client found = null;
+		for(int i=0; found==null && i<this.clients.size(); i++){
+			if(user.equals(this.clients.get(i).getUser()))
+				found = this.clients.get(i);
+		}
+		return found;
+	}
+	
+	private Client findSession(WebSocketSession session){
+		
+		Client found = null;
+		for(int i=0; found==null && i<this.clients.size(); i++){
+			if(session == this.clients.get(i).getSession())
+				found = this.clients.get(i);
+		}
+		return found;
 	}
 	
 	public void send(String user, Command command) throws IOException{
 		
-		for(Client client : this.clients)
-			if(user.equals(client.getUser()))
-				client.send(command);
+		Client client = this.findSession(user);
+		if(null != client)
+			client.send(command);
 	}
 	
 	public void send(List<String> users, Command command) throws IOException{
