@@ -121,7 +121,7 @@ public class SocketHandler extends TextWebSocketHandler{
 			if(client != null){
 
 				client.process((HeartBeat)ack);
-				client.send(new HeartBeat());
+				client.send(ack);
 			}
 		}
 	}

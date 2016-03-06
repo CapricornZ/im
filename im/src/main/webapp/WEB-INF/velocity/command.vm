@@ -1,7 +1,7 @@
 #set( $ContextPath = ${request.contextPath} )
 <html>
 	<head>
-		<title>校验码Demo - WebSocket/SockJS</title>
+		<title>Active HOSTs View</title>
 		<link type="text/css" href="${ContextPath}/resources/css/bootstrap.min.css" rel="stylesheet"/>
 		<link type="text/css" href="${ContextPath}/resources/css/bootstrap-switch.min.css" rel="stylesheet"/>
 		<style>
@@ -33,9 +33,7 @@
 			String.prototype.Trim = function(){ return this.replace(/(^\s*)|(\s*$)/g, ""); }   
 			String.prototype.LTrim = function(){ return this.replace(/(^\s*)/g, ""); }   
 			String.prototype.RTrim = function() { return this.replace(/(\s*$)/g, ""); }
-			
-			$.mask.definitions['z']='[0-9\-]';
-		
+
 			function checkAll(){
 				$('input[type=checkbox]').each(function(){
 					$(this).prop("checked", true);
@@ -212,20 +210,41 @@
 			
 			function openDlg(){
 
-				message.show();
-				BootstrapDialog.show({
-					title : '<center>COMMAND</center>',
-					message:message
-				});
+				dialog.open();
 			}
 			
-			var message;
-			$(function(){
-				message = $('#buttons');
-				message.hide();
+			function toggleForm(){
 				
-				$("#deltaPrice").mask("9999", {placeholder:"0800"});
-				$("input[data-toggle=TIME]").mask("99:99:zz", {placeholder:"hh:MM:ss"});
+				if($("span[data-toggle=TRIGGER-V1]").hasClass('glyphicon-plus-sign')){
+					$('span[data-toggle=TRIGGER-V1]').attr("class", 'glyphicon glyphicon-minus-sign');
+					$('div[data-toggle=TRIGGER-V1]').show();
+				} else {
+					$('span[data-toggle=TRIGGER-V1]').attr("class", 'glyphicon glyphicon-plus-sign');
+					$('div[data-toggle=TRIGGER-V1]').hide();
+				}
+				
+			}
+				
+			var message;
+			var dialog;
+			$(function(){
+				
+				$.mask.definitions['z']='[0-9\-]';
+				
+				message = $('#buttons');
+				dialog = new BootstrapDialog({
+					animate: false,
+					title  : '<center>COMMAND</center>',
+					message: message,
+					onshow : function(dialogRef){
+						$("#deltaPrice").mask("9999", {placeholder:"0800"});
+						$("input[data-toggle=TIME]").mask("99:99:zz", {placeholder:"hh:MM:ss"});
+					}
+				});
+				dialog.realize();
+        		dialog.getModalHeader().hide();
+        		dialog.getModalFooter().hide();
+        		
 				
 				$('input[data-toggle=clientFilter]').blur(function(){
 					
@@ -240,18 +259,6 @@
 					});
 				});
 			});
-			
-			function toggleForm(){
-				
-				if($("span[data-toggle=TRIGGER-V1]").hasClass('glyphicon-plus-sign')){
-					$('span[data-toggle=TRIGGER-V1]').attr("class", 'glyphicon glyphicon-minus-sign');
-					$('div[data-toggle=TRIGGER-V1]').show();
-				} else {
-					$('span[data-toggle=TRIGGER-V1]').attr("class", 'glyphicon glyphicon-plus-sign');
-					$('div[data-toggle=TRIGGER-V1]').hide();
-				}
-				
-			}
 		</script>
 	</head>
 	<body>

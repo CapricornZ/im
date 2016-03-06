@@ -410,7 +410,7 @@
 					<div class="col-lg-8" id="onlineUsers">在线用户：</div>
 					<div class="col-lg-4" style="text-align:right;"><button class="btn" onclick='$("#console").html("");$("#FINISH").html("0");'>clear^</button></div>
 				</div>
-				<div id="users" style="border: 1px solid #CCCCCC; overflow-y: scroll; height:50px;"></div>
+				<div id="users" style="border: 1px solid #CCCCCC; overflow-y: scroll; height:150px;"></div>
 			</div>
 		</div>
 	</body>
