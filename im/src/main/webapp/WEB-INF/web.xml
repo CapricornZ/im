@@ -8,11 +8,13 @@
 	<context-param>
 		<param-name>contextConfigLocation</param-name>
 		<param-value>
-			classpath:applicationContext-msg.xml,classpath:applicationContext-simulate.xml
+			classpath:applicationContext-msg.xml,
+			classpath:applicationContext-simulate.xml,
+			classpath:applicationContext-shiro.xml
 		</param-value>
 	</context-param>
 	<context-param>
-		<param-name>webAppRootKey</param-name>
+		<param-name>webIM</param-name>
 		<param-value>demo.im</param-value>
 	</context-param>
 	<context-param>
@@ -28,11 +30,24 @@
 			<param-value>UTF-8</param-value>
 		</init-param>
 	</filter>
+	<filter>
+    	<filter-name>shiroFilter</filter-name>
+    	<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+    	<!--<async-supported>true</async-supported>-->
+    	<init-param>
+      		<param-name>targetFilterLifecycle</param-name>
+      		<param-value>true</param-value>
+    	</init-param>
+  	</filter>
 
 	<filter-mapping>
 		<filter-name>encodingFilter</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
+	<filter-mapping>
+    	<filter-name>shiroFilter</filter-name>
+    	<url-pattern>/*</url-pattern>
+  	</filter-mapping>
 
 	<listener>
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>

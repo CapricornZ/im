@@ -18,6 +18,7 @@ import demo.im.rs.entity.Message;
 import demo.im.rs.entity.cmd.ReloadCmd;
 import demo.im.rs.entity.cmd.SetTimerCmd;
 import demo.im.rs.entity.cmd.SetTriggerCmd;
+import demo.im.rs.entity.cmd.TimeSyncCmd;
 import demo.im.rs.entity.cmd.TriggerF11Cmd;
 import demo.im.rs.entity.cmd.UpdatePolicyCmd;
 import demo.im.rs.entity.policy.Trigger;
@@ -39,21 +40,21 @@ public class CommandController {
 		return "command";
 	}
 	
-	@RequestMapping(value = "/message/{CLIENT}", method=RequestMethod.PUT)
+	@RequestMapping(value = "/user/{SESSION}", method=RequestMethod.DELETE)
 	@ResponseBody
-	public String message(@RequestBody String message, @PathVariable("CLIENT")String client) throws IOException{
+	public String remove(@PathVariable("SESSION")String session){
 		
-		Message command = new Message();
-		command.setContent(message);
-		this.repo.send(client, command);
+		logger.info("receive /user/" + session);
+		this.repo.removeUser(session);
 		return "SUCCESS";
 	}
 	
-	@RequestMapping(value = "/reload/{CLIENT}", method=RequestMethod.PUT)
+	@RequestMapping(value = "/batch/time/sync", method=RequestMethod.PUT, consumes="application/json; charset=utf-8")
 	@ResponseBody
-	public String reload(@PathVariable("CLIENT")String client) throws IOException{
+	public String timeSync(@RequestBody List<String> clients) throws IOException{
 		
-		this.repo.send(client, new ReloadCmd());
+		logger.info("receive /batch/time/sync");
+		this.repo.send(clients, new TimeSyncCmd());
 		return "SUCCESS";
 	}
 	

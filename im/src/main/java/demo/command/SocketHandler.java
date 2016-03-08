@@ -33,6 +33,25 @@ public class SocketHandler extends TextWebSocketHandler{
 		
 		return this.clients;
 	}
+	
+	public void removeUser(String sessionID){
+		
+		Client found = null;
+		for(int i=0; found == null && i<this.clients.size(); i++){
+			
+			if(this.clients.get(i).getSession().getId().equals(sessionID))
+				found = this.clients.get(i);
+		}
+		if(found != null){
+			
+			try {
+				found.getSession().close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			this.clients.remove(found);
+		}
+	}
 
 	@Override
 	protected void handlePongMessage(WebSocketSession session, PongMessage message) throws Exception {
@@ -82,6 +101,8 @@ public class SocketHandler extends TextWebSocketHandler{
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
 
 		logger.debug(">>>>>connection lost<<<<<");
+		String user = this.getUser(session);
+		
 		for(int i=this.clients.size()-1; i>=0; i--){
 			
 			if(session == this.clients.get(i).getSession())

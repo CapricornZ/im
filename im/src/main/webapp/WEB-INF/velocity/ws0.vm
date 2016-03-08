@@ -397,9 +397,7 @@
 				</p>
 				<input type="text" id="inputCaptcha" style="margin-bottom:10px;height:32px;"/>
 				<br/>
-				<button class="btn btn-sm btn-primary" onclick="return submitCaptcha();">
-				空格失效？快点这里！
-				</button>
+				<button class="btn btn-sm btn-primary" onclick="return submitCaptcha();">空格失效？快点这里！</button>
 				<br/>
 				GUID:<label id="uid"></label>
 			</div>
@@ -410,7 +408,7 @@
 					<div class="col-lg-8" id="onlineUsers">在线用户：</div>
 					<div class="col-lg-4" style="text-align:right;"><button class="btn" onclick='$("#console").html("");$("#FINISH").html("0");'>clear^</button></div>
 				</div>
-				<div id="users" style="border: 1px solid #CCCCCC; overflow-y: scroll; height:50px;"></div>
+				<div id="users" style="border: 1px solid #CCCCCC; overflow-y: scroll; height:100px;"></div>
 			</div>
 		</div>
 	</body>
