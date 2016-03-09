@@ -70,7 +70,7 @@
 			function fire(){
 				$.messager.model = {
 					ok:{ text: "确定", classed: 'btn-default' },
-					cancel: { text: "取消", classed: 'btn-error' }
+					cancel: { text: "取消", classed: 'btn-danger' }
 				};
 				$.messager.confirm("确定", "发送校验码测试？", function() {
 					

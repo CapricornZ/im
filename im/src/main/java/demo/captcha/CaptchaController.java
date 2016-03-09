@@ -61,6 +61,15 @@ public class CaptchaController {
 		
 		return "ws0";
 	}
+	
+	@RequestMapping(value = "/user/{SESSION}", method=RequestMethod.DELETE)
+	@ResponseBody
+	public String remove(@PathVariable("SESSION")String session){
+		
+		logger.info("receive [DELETE] /user/" + session);
+		this.sessionRepository.removeUser(session);
+		return "SUCCESS";
+	}
 
 	@RequestMapping(value = "/request", method=RequestMethod.POST, produces = "application/json;charset=UTF-8")
 	@ResponseBody

@@ -15,6 +15,7 @@
 		
 		<script type="text/javascript" src="${ContextPath}/resources/bootstrap.js"></script>
 		<script type="text/javascript" src="${ContextPath}/resources/bootstrap-switch.js"></script>
+		<script type="text/javascript" src="${ContextPath}/resources/jquery.bootstrap.min.js"></script>
 		
 		<script type="text/javascript" src="${ContextPath}/resources/date.js"></script>
 		
@@ -41,7 +42,7 @@
 		        	$("#status").html("<img src='${ContextPath}/resources/img/offline.ico'></img>离线！");
 		        }else{
 		        	$("#status").css("color","green");
-		        	$("#status").html("<img src='${ContextPath}/resources/img/online.ico'></img>在线！");
+		        	$("#status").html("<img src='${ContextPath}/resources/img/online.ico'></img>在线[" + userName + "]！");
 		        }
 		    }
 		    
@@ -59,7 +60,7 @@
 				else
 					userName = operator;
 					
-				userName = window.prompt("在此输入您的大名", userName);
+				userName = window.prompt("在此输入大名", userName);
 				if(userName == null || userName == ""){ 
 					return;
 				}
@@ -276,17 +277,42 @@
 				    	event.preventDefault();
 				    	submitCaptcha();
 				    }
-				});				
+				});
 		    });
+		    
+		    function removeSession(btn){
+		    
+		    	var sessionID = $(btn).attr('session');
+		    	$.messager.model = {
+					ok:{ text: "确定", classed: 'btn-default' },
+					cancel: { text: "取消", classed: 'btn-danger' }
+				};
+				$.messager.confirm("QUESTION", "确定要删除用户？", function() {
+					
+					$.ajax({
+						url  : "user/" + sessionID,
+						type : 'DELETE',
+						contentType:'application/json;charset=UTF-8', 
+						success: function(json) {
+							console.log(json);
+						}
+					});
+				});
+		    }
 		    
 		    var connectCallback = function() {
 		    	stompClient.subscribe('/topic/price', function(frame){
 			      	var users = JSON.parse(frame.body);
 			      	$('#users').html("");
 			      	for(var i=0; i< users.length; i++){
-			      		$('#users').append("<p style='word-wrap: break-word;margin:0 0 0 0;'>"+users[i]+"</p>");
+			      	
+			      		var user = JSON.parse(users[i]);
+			      		//$('#users').append("<p style='word-wrap: break-word;margin:0 0 0 0;'>"+users[i]+"</p>");
+			      		var remove = "<button session='{0}' style='margin-left:5px;margin-top:5px;' class='btn btn-xs btn-danger' onclick='removeSession(this);'><span class='glyphicon glyphicon-ban-circle'/>{1}</button>".format(user.session, user.user);
+			      		//$('#users').append("<p style='word-wrap: break-word;margin:0 0 0 0;'>"+ remove + "</p>");
+			      		$('#users').append(remove);
 			      	}
-			      	$('#onlineUsers').html("在线用户：" + new Date().pattern("HH:mm:ss.S"));
+			      	$('#onlineUsers').html("当前在线用户：" + new Date().pattern("HH:mm:ss.S"));
 				});
 		    };
 		    var errorCallback = function(error) { 
@@ -405,10 +431,10 @@
 			<div class="col-lg-4" style="margin-left: 10px;">
 				<div id="console" style="border: 1px solid #CCCCCC; height:170px; overflow-y: scroll;"></div>
 				<div class="row">
-					<div class="col-lg-8" id="onlineUsers">在线用户：</div>
+					<div class="col-lg-8" id="onlineUsers" style="margin-top:10px;">当前在线用户：</div>
 					<div class="col-lg-4" style="text-align:right;"><button class="btn" onclick='$("#console").html("");$("#FINISH").html("0");'>clear^</button></div>
 				</div>
-				<div id="users" style="border: 1px solid #CCCCCC; overflow-y: scroll; height:100px;"></div>
+				<div id="users" style="border: 1px solid #CCCCCC; overflow-y: scroll; height:35px;"></div>
 			</div>
 		</div>
 	</body>

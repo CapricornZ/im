@@ -1,5 +1,6 @@
 package demo.captcha;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,9 +63,31 @@ public class SocketHandler extends TextWebSocketHandler implements IRepository, 
 	public List<String> getActiveUsers(){
 		
 		List<String> rtn = new ArrayList<String>();
-		for(IConsumer consumer : this.clients)
-			rtn.add(consumer.getUser());
+		for(IConsumer consumer : this.clients){
+			
+			String user = String.format("{\"user\":\"%s\",\"session\":\"%s\"}", consumer.getUser(), consumer.getSession().getId());
+			rtn.add(user);
+		}
 		return rtn;
+	}
+	
+	public void removeUser(String sessionID){
+		
+		IConsumer found = null;
+		for(int i=0; found == null && i<this.clients.size(); i++){
+			
+			if(this.clients.get(i).getSession().getId().equals(sessionID))
+				found = this.clients.get(i);
+		}
+		if(found != null){
+			
+			try {
+				found.getSession().close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			this.clients.remove(found);
+		}
 	}
 	
 	@Override
