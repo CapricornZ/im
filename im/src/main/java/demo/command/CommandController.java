@@ -15,9 +15,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import demo.im.rs.entity.Message;
+import demo.im.rs.entity.cmd.LoginCmd;
 import demo.im.rs.entity.cmd.ReloadCmd;
 import demo.im.rs.entity.cmd.SetTimerCmd;
 import demo.im.rs.entity.cmd.SetTriggerCmd;
+import demo.im.rs.entity.cmd.Submit1Cmd;
 import demo.im.rs.entity.cmd.TimeSyncCmd;
 import demo.im.rs.entity.cmd.TriggerF11Cmd;
 import demo.im.rs.entity.cmd.UpdatePolicyCmd;
@@ -46,6 +48,24 @@ public class CommandController {
 		
 		logger.info("receive /user/" + session);
 		this.repo.removeUser(session);
+		return "SUCCESS";
+	}
+	
+	@RequestMapping(value = "/batch/login", method=RequestMethod.PUT, consumes="application/json; charset=utf-8")
+	@ResponseBody
+	public String triggerLogin(@RequestBody List<String> clients) throws IOException{
+		
+		logger.info("receive /batch/login");
+		this.repo.send(clients, new LoginCmd());
+		return "SUCCESS";
+	}
+	
+	@RequestMapping(value = "/batch/submit/1", method=RequestMethod.PUT, consumes="application/json; charset=utf-8")
+	@ResponseBody
+	public String triggerSubmitPrice(@RequestBody List<String> clients) throws IOException{
+		
+		logger.info("receive /batch/submit/1");
+		this.repo.send(clients, new Submit1Cmd());
 		return "SUCCESS";
 	}
 	

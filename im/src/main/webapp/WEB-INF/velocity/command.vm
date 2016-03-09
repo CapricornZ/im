@@ -97,16 +97,20 @@
 					clients.push($(this).val());
 				});
 				
-				$.ajax({
-					url  : "batch/updatePolicy",
-					type : 'PUT',
-					data : JSON.stringify(clients),
-					contentType: 'application/json; charset=utf-8',
-					success: function(json) { 
-						console.log("success");
-					},
-		            error: function(msg) {
-		            }
+				BootstrapDialog.confirm('确定要触发[更新策略]?', function(result){
+					if(!result)
+						return;
+					$.ajax({
+						url  : "batch/updatePolicy",
+						type : 'PUT',
+						data : JSON.stringify(clients),
+						contentType: 'application/json; charset=utf-8',
+						success: function(json) { 
+							console.log("success");
+						},
+			            error: function(msg) {
+			            }
+					});
 				});
 			}
 			
@@ -136,16 +140,21 @@
 				if($('#txtReload').val().Trim() != '')
 					data.param.push('triggerLoadResource?' + $('#txtReload').val());
 				
-				$.ajax({
-					url  : "batch/setParam",
-					type : 'PUT',
-					data : JSON.stringify(data),
-					contentType: 'application/json; charset=utf-8',
-					success: function(json) { 
-						console.log("success");
-					},
-		            error: function(msg) {
-		            }
+				BootstrapDialog.confirm('确定要设置新的[定时器]?', function(result){
+				
+					if(!result)
+						return;
+					$.ajax({
+						url  : "batch/setParam",
+						type : 'PUT',
+						data : JSON.stringify(data),
+						contentType: 'application/json; charset=utf-8',
+						success: function(json) { 
+							console.log("success");
+						},
+			            error: function(msg) {
+			            }
+					});
 				});
 			}
 		
@@ -156,16 +165,21 @@
 					clients.push($(this).val());
 				});
 				
-				$.ajax({
-					url  : "batch/trigger/reload",
-					type : 'PUT',
-					data : JSON.stringify(clients),
-					contentType: 'application/json; charset=utf-8',
-					success: function(json) { 
-						console.log("success");
-					},
-		            error: function(msg) {
-		            }
+				BootstrapDialog.confirm('确定要触发[加载配置]?', function(result){
+				
+					if(!result)
+						return;
+					$.ajax({
+						url  : "batch/trigger/reload",
+						type : 'PUT',
+						data : JSON.stringify(clients),
+						contentType: 'application/json; charset=utf-8',
+						success: function(json) { 
+							console.log("success");
+						},
+			            error: function(msg) {
+			            }
+					});
 				});
 			}
 			
@@ -176,16 +190,21 @@
 					clients.push($(this).val());
 				});
 				
-				$.ajax({
-					url  : "batch/trigger/F11",
-					type : 'PUT',
-					data : JSON.stringify(clients),
-					contentType: 'application/json; charset=utf-8',
-					success: function(json) { 
-						console.log("success");
-					},
-		            error: function(msg) {
-		            }
+				BootstrapDialog.confirm('确定要触发F11?', function(result){
+					
+					if(!result)
+						return;
+					$.ajax({
+						url  : "batch/trigger/F11",
+						type : 'PUT',
+						data : JSON.stringify(clients),
+						contentType: 'application/json; charset=utf-8',
+						success: function(json) { 
+							console.log("success");
+						},
+			            error: function(msg) {
+			            }
+					});
 				});
 			}
 			
@@ -232,19 +251,68 @@
 			}
 			
 			function timeSync(){
+				var clients = new Array();
+				$("input[type='checkbox']:checked").each(function(){
+					clients.push($(this).val());
+				});
+				BootstrapDialog.confirm('确定要触发[同步时间]?', function(result){
+					
+					if(!result)
+						return;
+					$.ajax({
+						url  : "batch/time/sync",
+						type : 'PUT',
+						data : JSON.stringify(clients),
+						contentType: 'application/json; charset=utf-8',
+						success: function(json) { console.log("success"); },
+			            error: function(msg) {
+			            }
+					});
+				});
+			}
+			
+			function triggerLogin(){
 			
 				var clients = new Array();
 				$("input[type='checkbox']:checked").each(function(){
 					clients.push($(this).val());
 				});
-				$.ajax({
-					url  : "batch/time/sync",
-					type : 'PUT',
-					data : JSON.stringify(clients),
-					contentType: 'application/json; charset=utf-8',
-					success: function(json) { console.log("success"); },
-		            error: function(msg) {
-		            }
+				BootstrapDialog.confirm('确定要触发[登陆操作]?', function(result){
+					
+					if(!result)
+						return;
+					$.ajax({
+						url  : "batch/login",
+						type : 'PUT',
+						data : JSON.stringify(clients),
+						contentType: 'application/json; charset=utf-8',
+						success: function(json) { console.log("success"); },
+			            error: function(msg) {
+			            }
+					});
+				});
+			}
+			
+			function triggerSubmitPrice(){
+				
+				var clients = new Array();
+				$("input[type='checkbox']:checked").each(function(){
+					clients.push($(this).val());
+				});
+					
+				BootstrapDialog.confirm('确定要触发[出价操作]?', function(result){
+					
+					if(!result)
+						return;
+					$.ajax({
+						url  : "batch/submit/1",
+						type : 'PUT',
+						data : JSON.stringify(clients),
+						contentType: 'application/json; charset=utf-8',
+						success: function(json) { console.log("success"); },
+			            error: function(msg) {
+			            }
+					});
 				});
 			}
 			
@@ -266,6 +334,19 @@
 				} else {
 					$('span[data-toggle=TRIGGER-V1]').attr("class", 'glyphicon glyphicon-plus-sign');
 					$('div[data-toggle=TRIGGER-V1]').hide();
+				}
+			}
+			
+			function toggleDiv(span){
+				
+				var toggle = $(span).attr('data-toggle');
+				
+				if($(span).hasClass('glyphicon-plus-sign')){
+					$(span).attr("class", 'glyphicon glyphicon-minus-sign');
+					$('div[data-toggle=' + toggle + ']').show();
+				} else {
+					$(span).attr("class", 'glyphicon glyphicon-plus-sign');
+					$('div[data-toggle=' + toggle + ']').hide();
 				}
 			}
 			
@@ -349,8 +430,10 @@
 						</div>
 					</fieldset>
 					<fieldset>
-						<legend>设置定时器</legend>
-						<div class="form-group">
+						<legend>
+							<span data-toggle="TIMER" class="glyphicon glyphicon-minus-sign" style="cursor:pointer;" onclick="return toggleDiv(this);"></span>设置定时器
+						</legend>
+						<div class="form-group" data-toggle="TIMER">
 							<label class="col-sm-2 control-label">F11</label>
 							<div class="col-sm-6"><input class="form-control" id="txtF11" placeholder="11:20:00,11:28:40"/></div>
 							<div class="col-sm-1">
@@ -358,13 +441,13 @@
 							<div class="col-sm-2">
 							</div>
 						</div>
-						<div class="form-group">
+						<div class="form-group" data-toggle="TIMER">
 							<label class="col-sm-2 control-label">更新策略</label>
 							<div class="col-sm-6"><input class="form-control" id="txtUpdatePolicy" placeholder="11:25:00"/></div>
 							<div class="col-sm-1">
 							</div>
 						</div>
-						<div class="form-group">
+						<div class="form-group" data-toggle="TIMER">
 							<label class="col-sm-2 control-label">加载配置</label>
 							<div class="col-sm-6"><input class="form-control" id="txtReload" placeholder="11:18:00"/></div>
 							<div class="col-sm-1">
@@ -375,22 +458,26 @@
 								</button>
 							</div>
 						</div>
+					</fieldset>
+					<fieldset>
+						<legend>COMMAND</legend>
 						<div class="form-group">
-							<div class="form-group">
 								<div class="col-sm-1"></div>
-								<div class="col-sm-10" style="text-align:center;">
+								<div class="col-sm-8" style="text-align:center;">
 									<button class="btn btn-xs btn-danger" onclick="return triggerF11();"><span class="glyphicon glyphicon-play"></span>F11</button>
 									<button class="btn btn-xs btn-danger" onclick="return updatePolicy();"><span class="glyphicon glyphicon-play"></span>更新策略</button>
 									<button class="btn btn-xs btn-danger" onclick="return triggerReload();"><span class="glyphicon glyphicon-play"></span>加载配置</button>
 									<button class="btn btn-xs btn-danger" onclick="return timeSync();"><span class="glyphicon glyphicon-time"></span>TimeSync</button>
 								</div>
-								<div class="col-sm-1"></div>
-							</div>
+								<div class="col-sm-3">
+									<button class="btn btn-xs btn-danger" onclick="return triggerLogin();"><span class="glyphicon glyphicon-user"></span>登陆</button>
+									<button class="btn btn-xs btn-danger" onclick="return triggerSubmitPrice();"><span class="glyphicon glyphicon-info-sign"></span>出价1</button>
+								</div>
 						</div>
 					</fieldset>
 					<fieldset>
 						<legend>
-							<span data-toggle="TRIGGER-V1" class="glyphicon glyphicon-minus-sign" style="cursor:pointer;" onclick="return toggleForm();"></span>DEBUG:策略V1
+							<span data-toggle="TRIGGER-V1" class="glyphicon glyphicon-minus-sign" style="cursor:pointer;" onclick="return toggleDiv(this);"></span>DEBUG:策略V1
 						</legend>
 						<div class="form-group" data-toggle="TRIGGER-V1">
 							<label class="col-sm-2 control-label">价格</label>
